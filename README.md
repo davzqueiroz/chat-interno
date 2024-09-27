@@ -1,2 +1,2 @@
 # chat-interno
-Chat Interno
+Chat Interno desenvolvido na empresa Parcol Parafusos com intuito de substituir o Spark que utiliza Firebase
