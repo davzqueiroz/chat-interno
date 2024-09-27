@@ -16,31 +16,7 @@
             <input type="image" src="definicoes.png" alt="Botão com Imagem" onclick="togglePanel()">
             <h2>Contatos</h2>
         </div>
-        <ul>
-            <li>Adriane Lima</li>
-            <li>Alan Souza</li>
-            <li>Ana Patricia</li>
-            <li>Antonio Valter</li>
-            <li>Ivan Aguiar</li>
-            <li>Luciana Lima</li>
-            <li>Luciana Trabuco</li>
-            <li>Francisco Barreto</li>
-            <li>Flavio Almeida</li>
-            <li>Catiene Dias</li>
-            <li>Jorge Paixão</li>
-            <li>Crislane Silva</li>
-            <li>Rafael Lauro</li>
-            <li>Ramon Lauro</li>
-            <li>Kelly Silva</li>
-            <li>Ana</li>
-            <li>João</li>
-            <li>Maria</li>
-            <li>Carlos</li>
-            <li>Ana</li>
-            <li>João</li>
-            <li>Maria</li>
-            <li>Carlos</li>
-            <li>Ana</li>
+        <ul id="ul-teste">
         </ul>
     </div>
 
@@ -60,7 +36,7 @@
         <div class="container-data">
 
             <div class="contact-data">
-                <img src="foto-usuario.png" alt="foto-usuario">
+                <img src="foto-usuario.png" alt="foto-usuario" id="foto-usuario">
                 <h2> Nome do contato</h2>
             </div>
 
@@ -88,9 +64,17 @@
             </div>
 
         </div>
+
+        <!-- <div class="panel-anexo" id="attachmentPanel">
+            <ul>
+                <li>📷 Enviar Foto</li>
+                <li>📁 Enviar Arquivo</li>
+                <li>📍 Enviar Localização</li>
+            </ul>
+        </div> -->
         
         <div class="input-msg">
-            <input class="image-anexo" type="image" src="anexo.png" alt="Botão com Imagem">
+            <input class="image-anexo" type="image" src="anexo.png" alt="Botão com Imagem" onclick="toggleAttachmentPanel()">
             <input class="type-text" type="text" name="msg" placeholder="Digite sua mensagem...">
             <input class="image-send" type="image" src="send.png" alt="Botão com Imagem">
         </div>
