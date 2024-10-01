@@ -16,7 +16,7 @@
             <input type="image" src="definicoes.png" alt="Botão com Imagem" onclick="togglePanel()">
             <h2>Contatos</h2>
         </div>
-        <ul id="ul-teste">
+        <ul id="lista-contatos">
         </ul>
     </div>
 
@@ -41,25 +41,8 @@
             </div>
 
             <div class="messages-chat">
-                <ul>
-                    <li class="received">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Texto menor</li>
-                    <li class="received">Texto menor</li>
-                    <li class="received">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Texto menor</li>
-                    <li class="received">Texto menor</li>
-                    <li class="received">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Texto menor</li>
-                    <li class="received">Texto menor</li>
-                    <li class="received">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Texto menor</li>
-                    <li class="received">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Lorem ipsum dolor sit amet. Est rerum laborum et animi saepe et numquam earum qui quia sunt non eveniet sint qui accusamus quos non galisum molestiae. </li>
-                    <li class="sended">Texto menor</li>
+                <ul id="lista-mensagens">
+                    
                 </ul>
             </div>
 
@@ -75,8 +58,8 @@
         
         <div class="input-msg">
             <input class="image-anexo" type="image" src="anexo.png" alt="Botão com Imagem" onclick="toggleAttachmentPanel()">
-            <input class="type-text" type="text" name="msg" placeholder="Digite sua mensagem...">
-            <input class="image-send" type="image" src="send.png" alt="Botão com Imagem">
+            <textarea class="type-text" type="text" name="msg" placeholder="Digite sua mensagem..." id="input-message"></textarea>
+            <input class="image-send" type="image" src="send.png" alt="Botão com Imagem" onclick="insertMessageHTML()">
         </div>
 
     </div>

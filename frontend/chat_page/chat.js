@@ -1,3 +1,5 @@
+/* Função para alterar entre contatos e configurações */
+
 function togglePanel() {
     const contactPanel = document.getElementById('contactPanel');
     const settingsPanel = document.getElementById('settingsPanel');
@@ -15,17 +17,58 @@ function togglePanel() {
 
 document.addEventListener("DOMContentLoaded", async(event) => { 
     const foto_user = document.getElementById('foto-usuario');
-    foto_user.src = "https://github.com/FelippeRibeiro.png"
+    foto_user.src = "https://github.com/davzqueiroz.png"
+    
+});
 
-    const lista = document.getElementById('ul-teste');
+/* Contatos dinâmicos */
 
-    for (let index = 0; index < 20; index++) {
-        const li = document.createElement('li')
-        li.innerText = index
-        lista.appendChild(li)
+const lista = document.getElementById('lista-contatos');
+
+async function get_contacts() {
+    try {
+        const response = await fetch('http://localhost:5000/get_contacts');
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json()
+        data['nomes'].forEach(element => {
+            const contato = document.createElement('li')
+            contato.innerText = element
+            lista.appendChild(contato)
+        });
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+get_contacts()
+
+
+/* Função para inserir mensagens no HTML */
+
+function insertMessageHTML() {
+    const value_textbar = document.getElementById('input-message').value;    
+    const mensagem = document.createElement('li')
+
+    if (value_textbar.trim() !== '') {
+    mensagem.innerText = value_textbar
+    mensagem.classList.add('sended')
+
+    document.getElementById('lista-mensagens').appendChild(mensagem)
+
+    const messageContainer = document.querySelector('.messages-chat')
+    messageContainer.scrollTop = messageContainer.scrollHeight;
     }
 
-    
+    document.getElementById('input-message').value = '';
+}
+
+/* Evento pra enviar mensagem pressionando */
+
+document.getElementById('input-message').addEventListener("keydown", function(event){
+    if (event.key == 'Enter' && !event.shiftKey) {
+        event.preventDefault()
+        insertMessageHTML()
+    }
 });
 
 /* ============================== PAINEL DE ANEXO =========================== */
