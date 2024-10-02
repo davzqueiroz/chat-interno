@@ -13,36 +13,6 @@ function togglePanel() {
     }
 }
 
-/* Foto dinamica */
-
-document.addEventListener("DOMContentLoaded", async(event) => { 
-    const foto_user = document.getElementById('foto-usuario');
-    foto_user.src = "https://github.com/davzqueiroz.png"
-    
-});
-
-/* Contatos dinâmicos */
-
-const lista = document.getElementById('lista-contatos');
-
-async function get_contacts() {
-    try {
-        const response = await fetch('http://localhost:5000/get_contacts');
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json()
-        data['nomes'].forEach(element => {
-            const contato = document.createElement('li')
-            contato.innerText = element
-            lista.appendChild(contato)
-        });
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-get_contacts()
-
-
 /* Função para inserir mensagens no HTML */
 
 function insertMessageHTML() {
@@ -70,6 +40,54 @@ document.getElementById('input-message').addEventListener("keydown", function(ev
         insertMessageHTML()
     }
 });
+
+/* Foto dinamica */
+
+document.addEventListener("DOMContentLoaded", async(event) => { 
+    const foto_user = document.getElementById('foto-usuario');
+    foto_user.src = "https://github.com/davzqueiroz.png"
+    
+});
+
+/* Contatos dinâmicos */
+
+const lista = document.getElementById('lista-contatos');
+
+async function get_contacts() {
+    try {
+        const response = await fetch('http://localhost:5000/get_contacts');
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json()
+        data['nomes'].forEach(element => {
+            const contato = document.createElement('li')
+            contato.innerText = element
+            contato.addEventListener('click', function editContactName() {
+                document.getElementById('nome-contato').innerText = element
+                showMessages(element)
+            })
+            lista.appendChild(contato)
+        });
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+get_contacts()
+
+/* Mensagens dinâmicas */
+
+async function showMessages(contactName) {
+    try {
+        const response = await fetch('http://localhost:5000/get_messages');
+        if (!response.ok) {throw new Error('Network response was not ok')};
+        const data = await response.json()
+        data['mensagens'].forEach(element => {
+            /* Adicionar aqui dentro lógica para inserir mensagens no HTML*/
+        });
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 /* ============================== PAINEL DE ANEXO =========================== */
 
