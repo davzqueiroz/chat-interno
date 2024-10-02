@@ -55,9 +55,10 @@ const lista = document.getElementById('lista-contatos');
 
 async function get_contacts() {
     try {
-        const response = await fetch('http://localhost:5000/get_contacts');
+        const response = await fetch('http://192.168.0.37:5000/get_contacts');
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json()
+        console.log(data)
         data['nomes'].forEach(element => {
             const contato = document.createElement('li')
             contato.innerText = element
@@ -78,10 +79,10 @@ get_contacts()
 
 async function showMessages(contactName) {
     try {
-        const response = await fetch('http://localhost:5000/get_messages');
+        const response = await fetch('http://192.168.0.37:5000/get_messages');
         if (!response.ok) {throw new Error('Network response was not ok')};
         const data = await response.json()
-        data['mensagens'].forEach(element => {
+        data['content'].forEach(element => {
             /* Adicionar aqui dentro lógica para inserir mensagens no HTML*/
         });
     } catch (error) {
