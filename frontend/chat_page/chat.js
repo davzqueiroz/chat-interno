@@ -3,7 +3,9 @@ const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
 const input_message = document.getElementById('input-message');
 
-/* Função para alterar entre contatos e configurações */
+// ======================== Função para alterar entre contatos e configurações ======================= //
+// ======================== Função para alterar entre contatos e configurações ======================= //
+// ======================== Função para alterar entre contatos e configurações ======================= //
 
 function togglePanel() {
 	const contactPanel = document.getElementById('contactPanel');
@@ -18,7 +20,9 @@ function togglePanel() {
 	}
 }
 
-/* Função para inserir mensagens no HTML */
+// =============================== Função para inserir mensagens no HTML ============================= //
+// =============================== Função para inserir mensagens no HTML ============================= //
+// =============================== Função para inserir mensagens no HTML ============================= //
 
 function insertMessageHTML(contato) {
 	console.log(contato);
@@ -48,14 +52,18 @@ function insertMessageHTML(contato) {
 	// messages_contacts.set(contato['id'], history)
 }
 
-/* Foto dinamica */
+// ============================================ Foto dinâmica ======================================== //
+// ============================================ Foto dinâmica ======================================== //
+// ============================================ Foto dinâmica ======================================== //
 
 document.addEventListener('DOMContentLoaded', async (event) => {
 	const foto_user = document.getElementById('foto-usuario');
 	foto_user.src = 'https://github.com/davzqueiroz.png';
 });
 
-/* Contatos dinâmicos */
+// =========================================== Contatos dinâmicos ==================================== //
+// =========================================== Contatos dinâmicos ==================================== //
+// =========================================== Contatos dinâmicos ==================================== //
 
 const lista = document.getElementById('lista-contatos');
 
@@ -95,7 +103,9 @@ async function get_contacts() {
 
 get_contacts();
 
-/* Mensagens dinâmicas */
+// ======================================= Mensagens dinâmicas ======================================== //
+// ======================================= Mensagens dinâmicas ======================================== //
+// ======================================= Mensagens dinâmicas ======================================== //
 
 async function showMessages(contact) {
 	lista_mensagens.innerText = '';
@@ -127,7 +137,9 @@ async function showMessages(contact) {
 	}
 }
 
-/* RENDERIZAR AS MENSAGENS NO HTML */
+// ========================================= RENDERIZAR AS MENSAGENS NO HTML ============================== //
+// ========================================= RENDERIZAR AS MENSAGENS NO HTML ============================== //
+// ========================================= RENDERIZAR AS MENSAGENS NO HTML ============================== //
 
 function render_messages(messages) {
 	messages.forEach((element) => {
@@ -138,7 +150,9 @@ function render_messages(messages) {
 	});
 }
 
-/* ============================== PAINEL DE ANEXO =========================== */
+// ================================================ PAINEL DE ANEXO ========================================= //
+// ================================================ PAINEL DE ANEXO ========================================= //
+// ================================================ PAINEL DE ANEXO ========================================= //
 
 // function toggleAttachmentPanel() {
 //     const panel = document.getElementById('attachmentPanel');
