@@ -1,13 +1,10 @@
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS, cross_origin
-import pyodbc
-import json
+import jwt
 import sqlite3
-
-SERVER = '192.168.0.169,1433'
-DATABASE = 'DaviTalk'
-USERNAME = 'davi'
-PASSWORD = '12345678@'
+from flask_socketio import SocketIO
+import datetime
+import bcrypt
 
 
 def connection():
@@ -18,12 +15,61 @@ def connection():
     return conn
 
 
+SERVER = '192.168.0.169,1433'
+DATABASE = 'DaviTalk'
+USERNAME = 'davi'
+PASSWORD = '12345678@'
+
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+socketio = SocketIO(app)
 CORS(app)
 
 
-@app.route("/get_messages", methods=[''])
-def consultar(my_id, is_group, id_target=None, group_name=None):
+
+@app.route("/login", methods=['POST'])
+def login():
+    data = request.get_json()
+    # verificar se login senha tipo = correto
+    # criptografar senha e ver se bate com a do banco
+    # criar token jwt do usuario
+    # retornar o token pro frontend
+    # receber o token em todas as requisições protegidas
+    login, senha = data['login'], data['senha']
+
+
+
+
+    #token = jwt.encode(payload={'id': 1, 'nome': 'Davi'}, key='1234')
+    #try:
+    #    pass
+    #except jwt.ExpiredSignatureError:
+    #    pass
+    #print(jwt.decode(jwt=teste['Authorization'][7:], key='1234', algorithms='HS256'))
+    return 'token'
+
+
+@app.route("/get_messages", methods=['POST'])
+def get_messages():
+    my_id = request.get_json()['my_id']
+    is_group = request.get_json()['is_group']
+    id_target = request.get_json()['id_target']
+    group_name = request.get_json()['group_name']
+    return consultar_mensagens(my_id, is_group, id_target, group_name)
+
+
+@app.route("/get_contacts", methods=['GET'])
+def get_contacts():
+    with connection() as conn:
+        cursor = conn.cursor()
+        contacts = cursor.execute("SELECT USER_ID, NOME FROM USUARIOS").fetchall()
+        contacts_list = []
+        for contact in contacts:
+            contacts_list.append({'id': contact[0], 'nome': contact[1]})
+    return contacts_list
+
+
+def consultar_mensagens(my_id, is_group, id_target=None, group_name=None):
     if type(my_id) is not int: raise Exception('Parâmetro MY_ID precisa ser INT')
     elif type(is_group) is not bool: raise Exception('Parâmetro IS_GROUP precisa ser Bool')
     elif id_target is not None and type(id_target) is not int: raise Exception('Parâmetro ID_TARGET precisa ser INT')
@@ -59,17 +105,6 @@ def consultar(my_id, is_group, id_target=None, group_name=None):
         # print(cursor.execute(f"SELECT CONVERSATION_ID FROM CONVERSATIONS WHERE IS_GROUP = {is_group} AND CONVERSATION_ID IN ({retorno})").fetchall())
 
 
-@app.route("/get_contacts", methods=['GET'])
-def get_contacts():
-    with connection() as conn:
-        cursor = conn.cursor()
-        contacts = cursor.execute("SELECT USER_ID, NOME FROM USUARIOS").fetchall()
-        contacts_list = []
-        for contact in contacts:
-            contacts_list.append(contact[1])
-        contacts_json = {'nomes': contacts_list}
-        contacts_json = json.dumps(contacts_json)
-    return contacts_json
-
-
-app.run(port=5000, host='192.168.0.37', debug=True)
+# app.run(port=5000, host='192.168.100.16', debug=True)
+if __name__ == '__main__':
+    socketio.run(app, allow_unsafe_werkzeug=True)

@@ -1,11 +1,10 @@
-import socketio
-import eventlet
+from flask import Flask, render_template
+from flask_socketio import SocketIO
 
-# create a Socket.IO server
-sio = socketio.Server(cors_allowed_origins='*')
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
+sio = SocketIO(app)
 
-# wrap with a WSGI application
-app = socketio.WSGIApp(sio)
 
 client_connections = []  # Dicionário para mapear identificação de conexão (request.sid) aos nomes dos clientes
 
@@ -42,5 +41,4 @@ def send_message(target, data):
 
 
 if __name__ == '__main__':
-    # Inicie o servidor Socket.IO usando Eventlet
-    eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5000)), app)
+    sio.run(app, allow_unsafe_werkzeug=True)
