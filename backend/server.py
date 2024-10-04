@@ -1,13 +1,12 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO
 
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 sio = SocketIO(app)
 
-
 client_connections = []  # Dicionário para mapear identificação de conexão (request.sid) aos nomes dos clientes
-
 
 @sio.event
 def connect(sid, environ, auth):
