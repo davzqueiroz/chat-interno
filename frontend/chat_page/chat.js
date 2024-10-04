@@ -1,3 +1,4 @@
+import { server } from '../server.js';
 const messages_contacts = new Map();
 const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
@@ -69,10 +70,7 @@ const lista = document.getElementById('lista-contatos');
 
 async function get_contacts() {
 	try {
-		const response = await fetch('http://localhost:5000/get_contacts');
-		if (!response.ok) throw new Error('Network response was not ok');
-		const data = await response.json();
-		console.log(data);
+		const { data } = await server('/get_contacts');
 
 		for (const contact of data) {
 			if (contact['id'] == 1) continue;
@@ -86,7 +84,6 @@ async function get_contacts() {
 					insertMessageHTML(contact);
 				};
 				input_message.onkeydown = (event) => {
-					console.log(event);
 					if (event.key == 'Enter' && !event.shiftKey) {
 						event.preventDefault();
 						insertMessageHTML(contact);
@@ -114,22 +111,13 @@ async function showMessages(contact) {
 		return;
 	}
 	try {
-		const response = await fetch('http://localhost:5000/get_messages', {
-			method: 'POST',
-			body: JSON.stringify({
-				my_id: 1,
-				is_group: false,
-				id_target: contact['id'],
-				group_name: '',
-			}),
-			headers: {
-				'Content-Type': 'application/json',
-			},
+		const { data } = await server.post('/get_messages', {
+			my_id: 1,
+			is_group: false,
+			id_target: contact['id'],
+			group_name: '',
 		});
-		if (!response.ok) {
-			throw new Error('Network response was not ok');
-		}
-		const data = await response.json();
+
 		messages_contacts.set(contact['id'], data);
 		render_messages(data);
 	} catch (error) {

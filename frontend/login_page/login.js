@@ -1,41 +1,32 @@
+import { server } from '../server.js';
 
-async function login(){
-// Obtém os valores dos campos de entrada
-const username = document.getElementById('username').value;
-const password = document.getElementById('password').value;
+async function login() {
+	// Obtém os valores dos campos de entrada
+	const username = document.getElementById('username').value;
+	const password = document.getElementById('password').value;
+	if (password.length <= 0) return alert('Insira sua senha');
+	if (username.length <= 0) return alert('Insira seu login');
 
-try {
-    const response = await fetch('http://localhost:5000/login', {
-        method: 'POST',
-        body: JSON.stringify({
-            email: username,
-            senha: password
-        }),
-        headers: {
-            'Content-Type': 'application/json'
-        },
-    });
+	try {
+		const request = await server.post('/login', {
+			email: username,
+			senha: password,
+		});
 
-    if (!response.ok) {
-        if (response.status === 401) {
-            throw new Error('Usuário ou senha incorretos.');
-        }
-        throw new Error(`Erro ao fazer login: ${response.status}`);
-    }
-    
-    const data = await response.json();   
-    const token = data['token']; 
-    
-    if (token) {
-        localStorage.setItem('authToken', token);
-        window.location.href = "../chat_page/chat.html";
-    }
+		const response = request.data;
+		const token = response['token'];
+		if (token) {
+			localStorage.setItem('authToken', token);
+			window.location.href = '../chat_page/chat.html';
+		}
+	} catch (error) {
+		const {
+			status,
+			response: { data },
+		} = error;
 
-} catch (error) {
-    console.error('Erro:', error);
-    alert(error.message);
+		if (status === 401) return alert(data.error);
+	}
 }
 
-};
-
-document.getElementById("button-login").addEventListener("click", login);
+document.getElementById('button-login').addEventListener('click', login);
