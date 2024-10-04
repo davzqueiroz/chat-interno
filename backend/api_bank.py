@@ -3,8 +3,10 @@ import jwt
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
-from flask_socketio import SocketIO
 from functions import *
+
+import socketio
+import eventlet
 
 # try:
 #    pass
@@ -13,11 +15,54 @@ from functions import *
 # print(jwt.decode(jwt=teste['Authorization'][7:], key='webchat', algorithms='HS256'))
 # return 'token'
 
+# =================================================== SOCKET.IO ========================================================
+# =================================================== SOCKET.IO ========================================================
+# =================================================== SOCKET.IO ========================================================
 
+# create a Socket.IO server
+sio = socketio.Server(cors_allowed_origins='*')
+client_connections = []  # Dicionário para mapear identificação de conexão (request.sid) aos nomes dos clientes
+
+
+@sio.event
+def connect(sid, environ, auth):
+    print(f"Conectado: {auth['name']}")
+    print(f"SID de {auth['name']}: {sid}")
+    client_connections.append({'name': auth['name'], 'sid': sid})
+    print(f"Clientes conectados: {client_connections}\n")
+    sio.emit('connected_users', client_connections)
+
+
+@sio.event
+def disconnect(sid):
+    print('Desconectado: ', sid)
+    # Remover usuarios desconectados da array
+    sio.emit('connected_users', client_connections)
+
+
+@sio.on('send_message')
+def send_message(target, data):
+    print(data, target)
+    recipient = data['recipient']  # Nome do destinatário
+    message = data['message']
+    autor = data['autor']
+
+    for connected in client_connections:
+        if connected['name'] == recipient:
+            sio.emit('message', message, room=connected['sid'])  # Envia a mensagem apenas para o destinatário
+            print(f"Mensagem recebida no servidor de {autor} para {recipient}: {message}")
+
+
+# ===================================================== FLASK ==========================================================
+# ===================================================== FLASK ==========================================================
+# ===================================================== FLASK ==========================================================
+
+
+# Criação da aplicação Flask
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
 CORS(app)
+
 
 # ================================================= ROTA DE LOGIN ======================================================
 # ================================================= ROTA DE LOGIN ======================================================
@@ -40,8 +85,9 @@ def login():
             return jsonify({'error': 'Usuário e/ou senha incorreta'}), 401
         else:
             if bcrypt.checkpw(senha.encode(), consulta_usuario[2]):
-                expiration = datetime.now() + timedelta(hours=8)
-                token = jwt.encode(payload={'id': consulta_usuario[0], 'nome': consulta_usuario[3], 'exp': expiration}, key='webchat', algorithm='HS256')
+                expiration = datetime.now() + timedelta(hours=9)
+                token = jwt.encode(payload={'id': consulta_usuario[0], 'nome': consulta_usuario[3], 'exp': expiration},
+                                   key='webchat', algorithm='HS256')
                 print(token)
                 return jsonify({'token': token}), 200
             else:
@@ -80,4 +126,5 @@ def get_contacts():
 
 # app.run(port=5000, host='192.168.100.16', debug=True)
 if __name__ == '__main__':
-    socketio.run(app, allow_unsafe_werkzeug=True)
+    app_with_socketio = socketio.WSGIApp(sio, app)
+    eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5000)), app_with_socketio)
