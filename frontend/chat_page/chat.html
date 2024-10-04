@@ -11,7 +11,7 @@
 		<div class="main-chat">
 			<div class="contact-panel active" id="contactPanel">
 				<div class="panel-header">
-					<input type="image" src="definicoes.png" alt="Botão com Imagem" onclick="togglePanel()" />
+					<input type="image" src="definicoes.png" alt="Botão com Imagem" id="settingsButton"/>
 					<h2>Contatos</h2>
 				</div>
 				<ul id="lista-contatos"></ul>
@@ -19,11 +19,11 @@
 
 			<div class="settings-panel" id="settingsPanel">
 				<div class="panel-header">
-					<input type="image" src="usuarios-alt.png" alt="Botão para Voltar" onclick="togglePanel()" />
+					<input type="image" src="usuarios-alt.png" alt="Botão para Voltar" id="contactsButton"/>
 					<h2>Configurações</h2>
 				</div>
 				<ul>
-					<li>Sair</li>
+					<li id="sair">Sair</li>
 					<!-- Outras opções de configuração -->
 				</ul>
 			</div>

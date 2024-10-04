@@ -19,7 +19,19 @@ function togglePanel() {
 		settingsPanel.classList.remove('active');
 		contactPanel.classList.add('active');
 	}
-}
+};
+
+document.getElementById('settingsButton').addEventListener('click', togglePanel)
+document.getElementById('contactsButton').addEventListener('click', togglePanel)
+
+// ======================================= Função para logout ======================================== //
+// ======================================= Função para logout ======================================== //
+// ======================================= Função para logout ======================================== //
+
+document.getElementById('sair').addEventListener('click', () => {
+    localStorage.removeItem('authToken');
+	window.location.href = '../login_page/login.html';
+});
 
 // =============================== Função para inserir mensagens no HTML ============================= //
 // =============================== Função para inserir mensagens no HTML ============================= //
