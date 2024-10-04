@@ -4,6 +4,27 @@ const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
 const input_message = document.getElementById('input-message');
 
+const socket = io('http://localhost:5000/', {
+	extraHeaders: {
+		Authorization: localStorage.getItem('authToken'),
+	},
+});
+
+socket.on('connect', () => {
+	console.log(socket); // true
+	// EXIBIR PRO USUARIO SE ELE ESTÁ CONECTADO
+});
+
+socket.on('disconnect', () => {
+	// EXIBIR PRO USUARIO SE ELE ESTÁ DESCONECTADO
+	console.log(socket.connected); // false
+	//Fazer
+	localStorage.removeItem('authToken');
+	window.location.href = '../login_page/login.html';
+	//
+});
+socket.io.on('reconnect', () => {});
+
 // ======================== Função para alterar entre contatos e configurações ======================= //
 // ======================== Função para alterar entre contatos e configurações ======================= //
 // ======================== Função para alterar entre contatos e configurações ======================= //
@@ -19,17 +40,17 @@ function togglePanel() {
 		settingsPanel.classList.remove('active');
 		contactPanel.classList.add('active');
 	}
-};
+}
 
-document.getElementById('settingsButton').addEventListener('click', togglePanel)
-document.getElementById('contactsButton').addEventListener('click', togglePanel)
+document.getElementById('settingsButton').addEventListener('click', togglePanel);
+document.getElementById('contactsButton').addEventListener('click', togglePanel);
 
 // ======================================= Função para logout ======================================== //
 // ======================================= Função para logout ======================================== //
 // ======================================= Função para logout ======================================== //
 
 document.getElementById('sair').addEventListener('click', () => {
-    localStorage.removeItem('authToken');
+	localStorage.removeItem('authToken');
 	window.location.href = '../login_page/login.html';
 });
 
@@ -62,6 +83,7 @@ function insertMessageHTML(contato) {
 		sender_id: 1,
 		content: value_textbar,
 	});
+	//socket.emit('');
 	// messages_contacts.set(contato['id'], history)
 }
 

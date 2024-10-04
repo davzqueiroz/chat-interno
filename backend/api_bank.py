@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from functions import *
+from hash_map import Hash_map
+
+client_connections = Hash_map()
 
 import socketio
 import eventlet
@@ -21,36 +24,60 @@ import eventlet
 
 # create a Socket.IO server
 sio = socketio.Server(cors_allowed_origins='*')
-client_connections = []  # Dicionário para mapear identificação de conexão (request.sid) aos nomes dos clientes
+# client_connections = []  # Dicionário para mapear identificação de conexão (request.sid) aos nomes dos clientes
+
 
 
 @sio.event
-def connect(sid, environ, auth):
-    print(f"Conectado: {auth['name']}")
-    print(f"SID de {auth['name']}: {sid}")
-    client_connections.append({'name': auth['name'], 'sid': sid})
-    print(f"Clientes conectados: {client_connections}\n")
-    sio.emit('connected_users', client_connections)
+def connect(sid, environ):
+    print(f"Conectado: ${sid}")
+    try:
+        headers = environ["headers_raw"]
+        token = ""
+        for tupla in headers:
+            if 'Authorization' in tupla:
+                token = tupla[1]
+
+        user_data = jwt.decode(token,"webchat",algorithms=["HS256"])
+        user_data['sid'] = sid
+        client_connections.set(user_data["id"],user_data)
+
+        # Salvar o SID e o cliente no hash_map ou numa lista
+        # user_data['sid'] = sid
+        # clients_connection.set(user_data['id'], user_data)
+        # client_connection.append(user_data)
+    except jwt.exceptions.InvalidSignatureError:
+        sio.disconnect(sid)
+    except jwt.exceptions.ExpiredSignatureError:
+        sio.disconnect(sid)
+    except jwt.exceptions.InvalidTokenError:
+        sio.disconnect(sid)
+    except jwt.exceptions.DecodeError:
+        sio.disconnect(sid)
 
 
 @sio.event
 def disconnect(sid):
     print('Desconectado: ', sid)
     # Remover usuarios desconectados da array
-    sio.emit('connected_users', client_connections)
+    #sio.emit('connected_users', client_connections)
+
+
 
 
 @sio.on('send_message')
-def send_message(target, data):
-    print(data, target)
-    recipient = data['recipient']  # Nome do destinatário
+def send_message(sid, data):
+    time = datetime.now()
+    target_id = data['target_id']  # Nome do destinatário
     message = data['message']
-    autor = data['autor']
+    author = sid
 
-    for connected in client_connections:
-        if connected['name'] == recipient:
-            sio.emit('message', message, room=connected['sid'])  # Envia a mensagem apenas para o destinatário
-            print(f"Mensagem recebida no servidor de {autor} para {recipient}: {message}")
+    if client_connections.has(target_id):
+        target_sid = client_connections.get(target_id)["sid"]
+        message_obj = {""}
+        sio.emit("message", data, target_sid)
+
+
 
 
 # ===================================================== FLASK ==========================================================
