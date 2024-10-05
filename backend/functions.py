@@ -2,7 +2,7 @@ import sqlite3
 
 
 def connection():
-    conn = sqlite3.connect('bank_webchat')
+    conn = sqlite3.connect('backend/bank_webchat')
     return conn
 
 
@@ -40,3 +40,5 @@ def consultar_mensagens(my_id, is_group, id_target=None, group_name=None):
         return mensagens
 
         # print(cursor.execute(f"SELECT CONVERSATION_ID FROM CONVERSATIONS WHERE IS_GROUP = {is_group} AND CONVERSATION_ID IN ({retorno})").fetchall())
+
+
