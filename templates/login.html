@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="PT-BR">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<link rel="stylesheet" href="{{url_for('static', filename='css/login.css')}}" />
+	</head>
+
+	<body>
+		<div class="main-login">
+			<div class="left-login">
+				<h1>
+					Faça login <br />
+					E entre para o nosso time
+				</h1>
+				<img src="{{url_for('static', filename='css/team-work.svg')}}" class="team-work-img" alt="team-work" />
+			</div>
+
+			<div class="right-login">
+				<div class="card-login">
+					<h1>Login</h1>
+
+					<div class="textfield">
+						<label for="usuario">Usuário</label>
+						<input type="text" id="username" name="usuario" placeholder="Usuário..." />
+					</div>
+					<div class="textfield">
+						<label for="senha">Senha</label>
+						<input type="password" id="password" name="senha" placeholder="Senha..." />
+					</div>
+					<button class="button-login" id="button-login">Login</button>
+				</div>
+			</div>
+		</div>
+
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<script type="module" src="{{url_for('static', filename='js/login.js')}}"></script>
+	</body>
+</html>

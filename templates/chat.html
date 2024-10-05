@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Chat Parcol</title>
+		<link rel="stylesheet" href="{{url_for('static', filename='css/chat.css')}}" />
+	</head>
+
+	<body>
+		<div class="main-chat">
+			<div class="contact-panel active" id="contactPanel">
+				<div class="panel-header">
+					<input
+						type="image"
+						src="{{url_for('static', filename='images/definicoes.png')}}"
+						alt="Botão com Imagem"
+						id="settingsButton"
+					/>
+					<h2>Contatos</h2>
+				</div>
+				<ul id="lista-contatos"></ul>
+			</div>
+
+			<div class="settings-panel" id="settingsPanel">
+				<div class="panel-header">
+					<input
+						type="image"
+						src="{{url_for('static', filename='images/usuarios-alt.png')}}"
+						alt="Botão para Voltar"
+						id="contactsButton"
+					/>
+					<h2>Configurações</h2>
+				</div>
+				<ul>
+					<li id="sair">Sair</li>
+					<!-- Outras opções de configuração -->
+				</ul>
+			</div>
+
+			<div class="chat">
+				<div class="container-data">
+					<div class="contact-data">
+						<img
+							src="{{url_for('static', filename='images/foto-usuario.png')}}"
+							alt="foto-usuario"
+							id="foto-usuario"
+						/>
+						<h2 id="nome-contato">Nome do contato</h2>
+					</div>
+
+					<div class="messages-chat">
+						<ul id="lista-mensagens"></ul>
+					</div>
+				</div>
+
+				<!-- <div class="panel-anexo" id="attachmentPanel">
+            <ul>
+                <li>📷 Enviar Foto</li>
+                <li>📁 Enviar Arquivo</li>
+                <li>📍 Enviar Localização</li>
+            </ul>
+        </div> -->
+
+				<div class="input-msg">
+					<input
+						class="image-anexo"
+						type="image"
+						src="{{url_for('static', filename='images/anexo.png')}}"
+						alt="Botão com Imagem"
+						onclick="toggleAttachmentPanel()"
+					/>
+					<textarea
+						class="type-text"
+						type="text"
+						name="msg"
+						placeholder="Digite sua mensagem..."
+						id="input-message"
+					></textarea>
+					<input
+						class="image-send"
+						type="image"
+						src="{{url_for('static', filename='images/send.png')}}"
+						alt="Botão com Imagem"
+						id="botao-enviar"
+					/>
+				</div>
+			</div>
+
+			<!-- <h3 class="made-by">Made by: <a href="https://instagram.com/dav_queiroz">Davi Oliveira</a> </h3> -->
+		</div>
+		<script
+			src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+			integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+			crossorigin="anonymous"
+		></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<script src="{{url_for('static', filename='js/chat.js')}}" type="module"></script>
+	</body>
+</html>
