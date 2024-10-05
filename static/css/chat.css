@@ -1,0 +1,368 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
+body {
+	margin: 0;
+	font-family: 'Noto Sans', sans-serif;
+}
+
+body * {
+	box-sizing: border-box;
+}
+
+.main-chat {
+	width: 100vw;
+	height: 100vh;
+	background-image: url('../images/bg.jpg');
+}
+
+/* ============================================== CSS DO PAINEL DE CONTATOS ======================================= */
+/* ============================================== CSS DO PAINEL DE CONTATOS ======================================= */
+/* ============================================== CSS DO PAINEL DE CONTATOS ======================================= */
+
+.contact-panel {
+	position: fixed;
+	left: 10%;
+	top: 10%;
+	width: 20vw;
+	height: 80vh;
+	background-color: #131d50; /* Cor principal fornecida */
+	color: white;
+	box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+	z-index: 999;
+	border-right: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 10px;
+	transition: opacity 0.5s ease, visibility 0.5s ease;
+	opacity: 0;
+	visibility: hidden;
+	z-index: 1;
+}
+
+.contact-panel.active,
+.settings-panel.active {
+	opacity: 1;
+	visibility: visible;
+	z-index: 2;
+}
+
+/* Garantir que o painel ativo esteja sempre acima */
+.contact-panel.active {
+	z-index: 2;
+}
+
+.contact-panel .panel-header {
+	padding: 20px;
+	background-color: #0f173d; /* Tom um pouco mais escuro */
+	color: white;
+	border-radius: 10px;
+}
+
+.contact-panel h2 {
+	margin: 0;
+	font-size: 160%;
+}
+
+.contact-panel ul {
+	list-style: none;
+	padding: 10px;
+	margin: 0;
+	max-height: calc(100% - 80px); /* Altura dinâmica com base no painel */
+	overflow-y: auto; /* Ativa o scroll vertical quando necessário */
+	scrollbar-width: none;
+}
+
+.contact-panel ul li {
+	padding: 15px;
+	margin-bottom: 10px;
+	background-color: #202b7a; /* Azul escuro suave */
+	border-radius: 8px;
+	font-size: 16px;
+	color: white;
+	cursor: pointer;
+	transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.contact-panel ul li:hover {
+	background-color: #3542a6; /* Um tom mais claro ao hover */
+	box-shadow: 0 2px 8px rgba(19, 29, 80, 0.2); /* Sombra suave */
+}
+
+.contact-panel ul li:active {
+	background-color: #4858c9; /* Tom mais claro no click */
+}
+
+.panel-header {
+	display: flex;
+	width: 100%;
+	position: relative;
+}
+
+.panel-header > h2 {
+	position: absolute; /* Para centralizar o h2 sem afetar o input */
+	left: 50%; /* Mover o h2 para o centro */
+	transform: translateX(-50%); /* Centraliza o h2 completamente */
+	margin: 0; /* Remove qualquer margem padrão */
+	align-items: center;
+}
+
+.panel-header > input {
+	width: 10%;
+	transition: background-color 0.3s ease, box-shadow 0.3s ease;
+	border-radius: 5px;
+}
+
+.panel-header > input:hover {
+	background-color: #3542a6; /* Um tom mais claro ao hover */
+	box-shadow: 0 2px 8px rgba(19, 29, 80, 0.2); /* Sombra suave */
+	border-radius: 5px;
+}
+
+.panel-header > input:active {
+	background-color: #4858c9; /* Tom mais claro no click */
+}
+
+/* ============================================== CSS DO PAINEL DE CONFIGURAÇÕES ======================================= */
+/* ============================================== CSS DO PAINEL DE CONFIGURAÇÕES ======================================= */
+/* ============================================== CSS DO PAINEL DE CONFIGURAÇÕES ======================================= */
+
+.settings-panel {
+	position: fixed;
+	left: 10%;
+	top: 10%;
+	width: 20vw;
+	height: 80vh;
+	background-color: #131d50; /* Cor principal fornecida */
+	color: white;
+	box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+	z-index: 999;
+	border-right: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 10px;
+	transition: opacity 0.5s ease, visibility 0.5s ease;
+	opacity: 0;
+	visibility: hidden;
+}
+
+.settings-panel .panel-header {
+	padding: 20px;
+	background-color: #0f173d; /* Tom um pouco mais escuro */
+	color: white;
+	text-align: center;
+	border-radius: 10px;
+}
+
+.settings-panel h2 {
+	margin: 0;
+	font-size: 22px;
+}
+
+.settings-panel ul {
+	list-style: none;
+	padding: 10px;
+	margin: 0;
+	max-height: calc(100% - 80px); /* Altura dinâmica com base no painel */
+	overflow-y: auto; /* Ativa o scroll vertical quando necessário */
+	scrollbar-width: none;
+}
+
+.settings-panel ul li {
+	padding: 15px;
+	margin-bottom: 10px;
+	background-color: #202b7a; /* Azul escuro suave */
+	border-radius: 8px;
+	font-size: 16px;
+	color: white;
+	cursor: pointer;
+	transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.settings-panel ul li:hover {
+	background-color: #3542a6; /* Um tom mais claro ao hover */
+	box-shadow: 0 2px 8px rgba(19, 29, 80, 0.2); /* Sombra suave */
+}
+
+.settings-panel ul li:active {
+	background-color: #4858c9; /* Tom mais claro no click */
+}
+
+/* ============================================== CSS DO CHAT ======================================= */
+/* ============================================== CSS DO CHAT ======================================= */
+/* ============================================== CSS DO CHAT ======================================= */
+
+.chat {
+	position: fixed;
+	left: 31%;
+	top: 10%;
+	width: 60vw;
+	height: 80vh;
+	background-color: #131d50f5;
+	color: white;
+	box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+	z-index: 999;
+	border-right: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 10px;
+	display: flex; /* Flexbox para controlar o layout interno */
+	flex-direction: column; /* Alinha itens verticalmente */
+	justify-content: space-between; /* Empurra o conteúdo para a parte inferior */
+	padding: 0; /* Adiciona algum espaço interno */
+}
+
+/* ============================================== CSS DO CONTACT-DATA ======================================= */
+/* ============================================== CSS DO CONTACT-DATA ======================================= */
+/* ============================================== CSS DO CONTACT-DATA ======================================= */
+
+.container-data {
+	display: flex;
+	border: none;
+	flex-direction: column;
+	height: 80%;
+	margin: 0;
+	flex-grow: 1;
+}
+
+.contact-data {
+	display: flex;
+	background-color: #202b7a;
+	border: none;
+	width: 100%; /* Garante que a div ocupe 100% da largura do contêiner pai */
+	padding: 0; /* Remova qualquer padding que possa estar causando o espaço */
+	margin: 0; /* Remova qualquer margem indesejada */
+	box-sizing: border-box; /* Certifique-se de que padding e border sejam incluídos na largura total */
+	border-radius: 10px 10px 0 0;
+	align-self: flex-start;
+}
+
+.contact-data > h2 {
+	display: flex;
+	padding-left: 1.5%;
+}
+
+.contact-data > img {
+	width: 5%;
+	height: 70%;
+	margin-left: 1vw;
+	margin-top: 0.65vw;
+	border-radius: 100px;
+}
+
+/* ============================================== CSS DO MESSAGES-CHAT ======================================= */
+/* ============================================== CSS DO MESSAGES-CHAT ======================================= */
+/* ============================================== CSS DO MESSAGES-CHAT ======================================= */
+
+.messages-chat {
+	overflow-y: auto;
+	height: 100%;
+	margin-top: 1vh;
+	margin-bottom: 1vh;
+	scrollbar-width: none; /* Para navegadores Firefox */
+}
+
+.messages-chat > ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.messages-chat li {
+	padding: 10px 15px;
+	border-radius: 10px;
+	margin-bottom: 10px;
+	max-width: 80%;
+	word-break: break-word;
+}
+
+.received {
+	align-self: flex-start;
+	background: #453474;
+	margin-left: 1vw;
+}
+
+.sended {
+	align-self: flex-end;
+	margin-left: auto;
+	background: #514869;
+	margin-right: 1vw;
+}
+
+.messages-chat::-webkit-scrollbar {
+	display: none; /* Para navegadores WebKit (Chrome, Safari) */
+}
+
+/* ============================================== CSS DO INPUT-MSG ======================================= */
+/* ============================================== CSS DO INPUT-MSG ======================================= */
+/* ============================================== CSS DO INPUT-MSG ======================================= */
+
+.input-msg {
+	background-color: #202b7a;
+	border-radius: 0 0 10px 10px;
+	width: 100%;
+	display: flex;
+	align-items: center; /* Centraliza o conteúdo verticalmente */
+	justify-content: space-between; /* Permite adicionar objetos nas laterais */
+	padding: 10px; /* Espaço interno para o conteúdo */
+	box-sizing: border-box;
+}
+
+.type-text {
+	width: 95%; /* Ajusta a largura do input para deixar espaço nas laterais */
+	height: 80%;
+	border: none;
+	border-radius: 10px;
+	padding: 15px;
+	background: #514869;
+	color: #f0ffffde;
+	font-size: 12pt;
+	box-shadow: 0px 10px 40px #00000056;
+	outline: none;
+	box-sizing: border-box;
+	margin-right: 1vw; /* Espaço entre o input e o próximo elemento à direita */
+	margin-left: 1vw;
+	resize: none;
+}
+
+.type-text > input::placeholder {
+	color: #f0ffff94;
+}
+
+.image-anexo {
+	width: 3.5%;
+	margin-right: none;
+}
+
+.image-send {
+	width: 3.5%;
+}
+
+.panel-anexo {
+	margin-top: 47%;
+	margin-left: 1%;
+	position: absolute;
+	background-color: #0f173d;
+	padding: 15px;
+	border-radius: 10px;
+	display: none;
+	box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+	transform: translateY(100%);
+	transition: transform 0.3s ease;
+}
+
+.panel-anexo.open {
+	display: block;
+	transform: translateY(0);
+}
+
+.panel-anexo ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+
+.panel-anexo li {
+	padding: 10px 0;
+	cursor: pointer;
+}
+
+.panel-anexo li:hover {
+	background-color: #2038a5;
+	border-radius: 5px;
+}
