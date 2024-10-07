@@ -27,10 +27,9 @@ sio = socketio.Server(cors_allowed_origins='*')
 # client_connections = []  # Dicionário para mapear identificação de conexão (request.sid) aos nomes dos clientes
 
 
-
 @sio.event
 def connect(sid, environ):
-    print(f"Conectado: ${sid}")
+    print('Conectado: ', sid)
     try:
         headers = environ["headers_raw"]
         token = ""
@@ -40,7 +39,7 @@ def connect(sid, environ):
 
         user_data = jwt.decode(token,"webchat",algorithms=["HS256"])
         user_data['sid'] = sid
-        client_connections.set(user_data["id"],user_data)
+        client_connections.set(user_data["id"], user_data)
 
         # Salvar o SID e o cliente no hash_map ou numa lista
         # user_data['sid'] = sid
@@ -58,22 +57,27 @@ def connect(sid, environ):
 
 @sio.event
 def disconnect(sid):
-    print('Desconectado: ', sid)
-    # Remover usuarios desconectados da array
-    #sio.emit('connected_users', client_connections)
+    for dic in client_connections.get_all():
+        if client_connections.get(dic)['sid'] == sid:
+            client_connections.delete(key=dic)
+            break
 
 
 @sio.on('send_message')
 def send_message(sid, data):
-    time = datetime.now()
-    target_id = data['target_id']  # Nome do destinatário
+    conversation_id = data['conversation_id']
+    target_id = data['target_id']
     message = data['message']
-    author = sid
+    author_id = data['author_id']
 
     if client_connections.has(target_id):
         target_sid = client_connections.get(target_id)["sid"]
-        message_obj = {""}
-        sio.emit("message", data, target_sid)
+        data = {'target_id': target_id, 'message': message, 'author': sid, 'author_id': author_id}
+        with connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now'), 'TEXT')")
+            conn.commit()  # Ao enviar mensagens salvar no banco de dados
+        sio.emit("message", data)
 
 
 # ===================================================== FLASK ==========================================================
@@ -106,14 +110,12 @@ def chat():
 def login():
     data = request.get_json()
     email, senha = data['email'], data['senha']
-    print(email, senha)
     if type(email) is not str: return jsonify({'error': 'Email precisa ser STRING'}), 401
     if type(senha) is not str: return jsonify({'error': 'Senha precisa ser STRING'}), 401
 
     with connection() as conn:
         cursor = conn.cursor()
         consulta_usuario = cursor.execute(f"SELECT * FROM USUARIOS WHERE EMAIL = '{email}'").fetchone()
-        print(consulta_usuario)
         if consulta_usuario is None:
             return jsonify({'error': 'Usuário e/ou senha incorreta'}), 401
         else:
@@ -121,7 +123,6 @@ def login():
                 expiration = datetime.now() + timedelta(hours=9)
                 token = jwt.encode(payload={'id': consulta_usuario[0], 'nome': consulta_usuario[3], 'exp': expiration},
                                    key='webchat', algorithm='HS256')
-                print(token)
                 return jsonify({'token': token}), 200
             else:
                 return jsonify({'error': 'Usuário e/ou senha incorreta'}), 401
@@ -160,4 +161,4 @@ def get_contacts():
 # app.run(port=5000, host='192.168.100.16', debug=True)
 if __name__ == '__main__':
     app_with_socketio = socketio.WSGIApp(sio, app)
-    eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 5000)), app_with_socketio)
+    eventlet.wsgi.server(eventlet.listen(('192.168.0.37', 5000)), app_with_socketio)
