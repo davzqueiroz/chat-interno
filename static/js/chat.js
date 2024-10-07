@@ -3,27 +3,50 @@ const messages_contacts = new Map();
 const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
 const input_message = document.getElementById('input-message');
-
-const socket = io('http://localhost:5000/', {
+const socket = io('http://192.168.0.37:5000/', {
 	extraHeaders: {
 		Authorization: localStorage.getItem('authToken'),
 	},
 });
 
 socket.on('connect', () => {
-	console.log(socket); // true
+	// console.log(socket); // true
 	// EXIBIR PRO USUARIO SE ELE ESTÁ CONECTADO
 });
 
 socket.on('disconnect', () => {
 	// EXIBIR PRO USUARIO SE ELE ESTÁ DESCONECTADO
-	console.log(socket.connected); // false
+	// console.log(socket.connected); // false
 	//Fazer
 	localStorage.removeItem('authToken');
 	window.location.href = '/';
 	//
 });
+
 socket.io.on('reconnect', () => {});
+
+socket.on('message', (data) => {	
+
+	if (!messages_contacts.has(data['author_id'])) messages_contacts.set(data['author_id'], []);
+	const history = messages_contacts.get(data['author_id']);
+	history.push({
+		id: 3,
+		conversation_id: 3,
+		sender_id: data['author_id'],
+		content: data['message'],
+	});
+
+	if (data['author_id'] == contato_atual['id']) {
+		const mensagem = document.createElement('li');
+		mensagem.innerText = data['message'];
+		mensagem.classList.add('received');
+		document.getElementById('lista-mensagens').appendChild(mensagem);
+		document.querySelector('.messages-chat').scrollTop = document.querySelector('.messages-chat').scrollHeight;
+	};
+
+});
+
+const user_data = jwt_decode(localStorage.getItem('authToken'));
 
 // ======================== Função para alterar entre contatos e configurações ======================= //
 // ======================== Função para alterar entre contatos e configurações ======================= //
@@ -59,7 +82,6 @@ document.getElementById('sair').addEventListener('click', () => {
 // =============================== Função para inserir mensagens no HTML ============================= //
 
 function insertMessageHTML(contato) {
-	console.log(contato);
 	const value_textbar = document.getElementById('input-message').value;
 	const mensagem = document.createElement('li');
 
@@ -80,10 +102,15 @@ function insertMessageHTML(contato) {
 	history.push({
 		id: 3,
 		conversation_id: 3,
-		sender_id: 1,
+		sender_id: user_data['id'],
 		content: value_textbar,
 	});
-	//socket.emit('');
+
+	if (value_textbar.trim() !== '') {
+		socket.emit('send_message', {target_id: contato_atual['id'], message: value_textbar, author_id: user_data['id']});
+	}
+	
+
 	// messages_contacts.set(contato['id'], history)
 }
 
@@ -100,6 +127,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
 // =========================================== Contatos dinâmicos ==================================== //
 // =========================================== Contatos dinâmicos ==================================== //
 
+var contato_atual = ''
 const lista = document.getElementById('lista-contatos');
 
 async function get_contacts() {
@@ -107,8 +135,7 @@ async function get_contacts() {
 		const { data } = await server('/get_contacts');
 
 		for (const contact of data) {
-			if (contact['id'] == 1) continue;
-			console.log(contact);
+			if (contact['id'] == user_data['id']) continue;
 			const contato = document.createElement('li');
 			contato.innerText = contact['nome'];
 			contato.addEventListener('click', function editContactName() {
@@ -123,6 +150,7 @@ async function get_contacts() {
 						insertMessageHTML(contact);
 					}
 				};
+				contato_atual = contact
 			});
 
 			lista.appendChild(contato);
@@ -146,7 +174,7 @@ async function showMessages(contact) {
 	}
 	try {
 		const { data } = await server.post('/get_messages', {
-			my_id: 1,
+			my_id: user_data['id'],
 			is_group: false,
 			id_target: contact['id'],
 			group_name: '',
@@ -166,7 +194,7 @@ async function showMessages(contact) {
 function render_messages(messages) {
 	messages.forEach((element) => {
 		const msg = document.createElement('li');
-		msg.classList.add(element['sender_id'] == 1 ? 'sended' : 'received');
+		msg.classList.add(element['sender_id'] == user_data['id'] ? 'sended' : 'received');
 		msg.innerText = element['content'];
 		lista_mensagens.appendChild(msg);
 	});

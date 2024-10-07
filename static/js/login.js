@@ -1,7 +1,6 @@
 import { server } from '../js/server.js';
 
 async function login() {
-	// Obtém os valores dos campos de entrada
 	const username = document.getElementById('username').value;
 	const password = document.getElementById('password').value;
 	if (password.length <= 0) return alert('Insira sua senha');
