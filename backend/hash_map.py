@@ -8,13 +8,14 @@ class Hash_map:
 
     def set(self,key,value):
         self.store[key] = value
-        return  self.store[key]
+        return self.store[key]
 
-    def delete(self,key):
-        self.store.pop(key,None)
+    def delete(self, key):
+        self.store.pop(key, None)
 
-    def has(self,key):
+    def has(self, key):
         return key in self.store
 
-
+    def get_all(self):
+        return self.store
 
