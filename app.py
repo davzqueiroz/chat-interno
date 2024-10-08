@@ -32,30 +32,16 @@ sio = socketio.Server(cors_allowed_origins='*')
 
 @sio.event
 def connect(sid, environ):
-    print('Conectado: ', sid)
-    try:
-        headers = environ["headers_raw"]
-        token = ""
-        for tupla in headers:
-            if 'Authorization' in tupla:
-                token = tupla[1]
+    headers = environ["headers_raw"]
+    token = ""
+    for tupla in headers:
+        if 'Authorization' in tupla:
+            token = tupla[1]
 
-        user_data = jwt.decode(token,"webchat",algorithms=["HS256"])
-        user_data['sid'] = sid
-        client_connections.set(user_data["id"], user_data)
-
-        # Salvar o SID e o cliente no hash_map ou numa lista
-        # user_data['sid'] = sid
-        # clients_connection.set(user_data['id'], user_data)
-        # client_connection.append(user_data)
-    except jwt.exceptions.InvalidSignatureError:
-        sio.disconnect(sid)
-    except jwt.exceptions.ExpiredSignatureError:
-        sio.disconnect(sid)
-    except jwt.exceptions.InvalidTokenError:
-        sio.disconnect(sid)
-    except jwt.exceptions.DecodeError:
-        sio.disconnect(sid)
+    user_data = verificar_token(token)
+    user_data['sid'] = sid
+    client_connections.set(user_data["id"], user_data)
+    sio.emit('receive_client_connections', [client_connections.get_all()])
 
 
 @sio.event
@@ -64,6 +50,7 @@ def disconnect(sid):
         if client_connections.get(dic)['sid'] == sid:
             client_connections.delete(key=dic)
             break
+    sio.emit('receive_client_connections', client_connections.get_all())
 
 
 @sio.on('send_message')
@@ -71,16 +58,13 @@ def send_message(sid, data):
     target_id = data['target_id']
     message = data['message']
     author_id = data['author_id']
+    conversation_id = consulta_conversation_id(author_id, target_id)
 
-    inserir_mensagem(consulta_conversation_id(author_id, target_id), author_id, message)
+    inserir_mensagem(conversation_id, author_id, message)
 
     if client_connections.has(target_id):
-        target_sid = client_connections.get(target_id)["sid"]
         data = {'target_id': target_id, 'message': message, 'author': sid, 'author_id': author_id}
         sio.emit("message", data)
-
-
-
 
 
 # ===================================================== FLASK ==========================================================
@@ -138,11 +122,37 @@ def login():
 
 @app.route("/get_messages", methods=['POST'])
 def get_messages():
-    my_id = request.get_json()['my_id']
-    is_group = request.get_json()['is_group']
-    id_target = request.get_json()['id_target']
-    group_name = request.get_json()['group_name']
-    return consultar_mensagens(my_id, is_group, id_target, group_name)
+    token = request.headers['Authorization'].replace('Bearer ', '').strip()
+    user_data = verificar_token(token)
+
+    if user_data is not None:
+        is_group = request.get_json()['is_group']
+        id_target = request.get_json()['id_target']
+        group_name = request.get_json()['group_name']
+
+        return consultar_mensagens(user_data['id'], is_group, id_target, group_name)
+    else: return jsonify({'error': 'Token inválido'}), 401
+
+
+# =============================================== ROTA DE GRUPOS =======================================================
+# =============================================== ROTA DE GRUPOS =======================================================
+# =============================================== ROTA DE GRUPOS =======================================================
+
+
+@app.route("/get_groups", methods=['GET'])
+def get_groups():
+    token = request.headers['Authorization'][7:]
+    user_data = verificar_token(token)
+
+    if user_data is not None:
+        with connection() as conn:
+            cursor = conn.cursor()
+            groups_list = []
+            groups = cursor.execute(f"SELECT CONVERSATION_ID, CONVERSATION_NAME FROM CONVERSATIONS WHERE IS_GROUP = 1 AND CONVERSATION_ID IN (SELECT CONVERSATION_ID FROM CONVERSATION_MEMBERS WHERE MEMBER_ID = {user_data['id']}) ORDER BY CONVERSATION_NAME ASC").fetchall()
+            for group in groups:
+                groups_list.append({'id': group[0], 'nome': group[1]})
+            return groups_list
+    else: return jsonify({'error': 'Token inválido'}), 401
 
 
 # ============================================== ROTA DE CONTATOS ======================================================
@@ -152,16 +162,20 @@ def get_messages():
 
 @app.route("/get_contacts", methods=['GET'])
 def get_contacts():
-    with connection() as conn:
-        cursor = conn.cursor()
-        contacts = cursor.execute("SELECT USER_ID, NOME FROM USUARIOS").fetchall()
-        contacts_list = []
-        for contact in contacts:
-            contacts_list.append({'id': contact[0], 'nome': contact[1]})
-    return contacts_list
+    token = request.headers['Authorization'].replace('Bearer ', '').strip()
+    user_data = verificar_token(token)
+
+    if user_data is not None:
+        with connection() as conn:
+            cursor = conn.cursor()
+            contacts = cursor.execute("SELECT USER_ID, NOME FROM USUARIOS ORDER BY NOME ASC").fetchall()
+            contacts_list = []
+            for contact in contacts:
+                contacts_list.append({'id': contact[0], 'nome': contact[1]})
+        return contacts_list
+    else: return jsonify({'error': 'Token inválido'}), 401
 
 
-# app.run(port=5000, host='192.168.100.16', debug=True)
 if __name__ == '__main__':
     app_with_socketio = socketio.WSGIApp(sio, app)
     eventlet.wsgi.server(eventlet.listen((local_ip, 5000)), app_with_socketio)
