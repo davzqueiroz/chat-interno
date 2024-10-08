@@ -1,4 +1,6 @@
 import sqlite3
+import jwt
+import socketio
 
 
 def connection():
@@ -63,3 +65,17 @@ def inserir_mensagem(conversation_id, author_id, message):
         cursor = conn.cursor()
         cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now'), 'TEXT')")
         conn.commit()  # Ao enviar mensagens salvar no banco de dados
+
+
+def verificar_token(token):
+    try:
+        user_data = jwt.decode(token, "webchat", algorithms=["HS256"])
+        return user_data
+    except jwt.exceptions.InvalidSignatureError:
+        return None
+    except jwt.exceptions.ExpiredSignatureError:
+        return None
+    except jwt.exceptions.DecodeError:
+        return None
+    except jwt.exceptions.InvalidTokenError:
+        return None

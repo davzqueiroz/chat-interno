@@ -14,5 +14,5 @@ with connection() as conn:
     cursor = conn.cursor()
     senha = b'1234'
     hashed = bcrypt.hashpw(senha, bcrypt.gensalt())
-    cursor.execute("INSERT INTO USUARIOS (EMAIL, SENHA, NOME) VALUES (?, ?, ?)", ('milton@parcol.com.br', hashed, 'Milton Schreiber'))
+    cursor.execute("INSERT INTO USUARIOS (EMAIL, SENHA, NOME) VALUES (?, ?, ?)", ('caixa@parcol.com.br', hashed, 'Renata Valente'))
     conn.commit()
