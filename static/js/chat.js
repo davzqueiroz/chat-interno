@@ -3,7 +3,7 @@ const messages_contacts = new Map();
 const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
 const input_message = document.getElementById('input-message');
-const socket = io('http://192.168.0.37:5000/', {
+const socket = io('http://192.168.100.16:5000/', {
 	extraHeaders: {
 		Authorization: localStorage.getItem('authToken'),
 	},
@@ -25,8 +25,7 @@ socket.on('disconnect', () => {
 
 socket.io.on('reconnect', () => {});
 
-socket.on('message', (data) => {	
-
+socket.on('message', (data) => {
 	if (!messages_contacts.has(data['author_id'])) messages_contacts.set(data['author_id'], []);
 	const history = messages_contacts.get(data['author_id']);
 	history.push({
@@ -42,8 +41,7 @@ socket.on('message', (data) => {
 		mensagem.classList.add('received');
 		document.getElementById('lista-mensagens').appendChild(mensagem);
 		document.querySelector('.messages-chat').scrollTop = document.querySelector('.messages-chat').scrollHeight;
-	};
-
+	}
 });
 
 const user_data = jwt_decode(localStorage.getItem('authToken'));
@@ -107,9 +105,13 @@ function insertMessageHTML(contato) {
 	});
 
 	if (value_textbar.trim() !== '') {
-		socket.emit('send_message', {target_id: contato_atual['id'], message: value_textbar, author_id: user_data['id']});
+		socket.emit('send_message', {
+			target_id: contato_atual['id'],
+			message: value_textbar,
+			author_id: user_data['id'],
+			conversation_id: '',
+		});
 	}
-	
 
 	// messages_contacts.set(contato['id'], history)
 }
@@ -127,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
 // =========================================== Contatos dinâmicos ==================================== //
 // =========================================== Contatos dinâmicos ==================================== //
 
-var contato_atual = ''
+var contato_atual = '';
 const lista = document.getElementById('lista-contatos');
 
 async function get_contacts() {
@@ -150,7 +152,7 @@ async function get_contacts() {
 						insertMessageHTML(contact);
 					}
 				};
-				contato_atual = contact
+				contato_atual = contact;
 			});
 
 			lista.appendChild(contato);

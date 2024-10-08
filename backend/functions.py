@@ -42,3 +42,24 @@ def consultar_mensagens(my_id, is_group, id_target=None, group_name=None):
         # print(cursor.execute(f"SELECT CONVERSATION_ID FROM CONVERSATIONS WHERE IS_GROUP = {is_group} AND CONVERSATION_ID IN ({retorno})").fetchall())
 
 
+def consulta_conversation_id(my_id, id_target):
+    with connection() as conn:
+        for c in range(2):
+            cursor = conn.cursor()
+            consulta = cursor.execute(f"SELECT CONVERSATION_ID FROM CONVERSATION_MEMBERS WHERE MEMBER_ID = {my_id} AND CONVERSATION_ID IN (SELECT CONVERSATION_ID FROM CONVERSATION_MEMBERS WHERE MEMBER_ID = {id_target})").fetchall()
+            consulta = ','.join(map(str, [t[0] for t in consulta]))
+            id_pvs = cursor.execute(f"SELECT CONVERSATION_ID FROM CONVERSATIONS WHERE IS_GROUP = 0 AND CONVERSATION_ID IN ({consulta})").fetchone()
+            if id_pvs is None:
+                cursor.execute(f"INSERT INTO CONVERSATIONS (CONVERSATION_NAME, IS_GROUP) VALUES (NULL, 0)")
+                cursor.execute(f"INSERT INTO CONVERSATION_MEMBERS (CONVERSATION_ID, MEMBER_ID) VALUES ((SELECT CONVERSATION_ID FROM CONVERSATIONS ORDER BY CONVERSATION_ID DESC LIMIT 1), {my_id})")
+                cursor.execute(f"INSERT INTO CONVERSATION_MEMBERS (CONVERSATION_ID, MEMBER_ID) VALUES ((SELECT CONVERSATION_ID FROM CONVERSATIONS ORDER BY CONVERSATION_ID DESC LIMIT 1), {id_target})")
+                conn.commit()
+
+        return id_pvs[0]
+
+
+def inserir_mensagem(conversation_id, author_id, message):
+    with connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now'), 'TEXT')")
+        conn.commit()  # Ao enviar mensagens salvar no banco de dados

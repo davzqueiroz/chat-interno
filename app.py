@@ -7,7 +7,10 @@ from backend.functions import *
 from backend.hash_map import Hash_map
 import socketio
 import eventlet
+import socket
 
+hostname = socket.gethostname()
+local_ip = socket.gethostbyname(hostname)
 client_connections = Hash_map()
 
 
@@ -65,19 +68,19 @@ def disconnect(sid):
 
 @sio.on('send_message')
 def send_message(sid, data):
-    conversation_id = data['conversation_id']
     target_id = data['target_id']
     message = data['message']
     author_id = data['author_id']
 
+    inserir_mensagem(consulta_conversation_id(author_id, target_id), author_id, message)
+
     if client_connections.has(target_id):
         target_sid = client_connections.get(target_id)["sid"]
         data = {'target_id': target_id, 'message': message, 'author': sid, 'author_id': author_id}
-        with connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now'), 'TEXT')")
-            conn.commit()  # Ao enviar mensagens salvar no banco de dados
         sio.emit("message", data)
+
+
+
 
 
 # ===================================================== FLASK ==========================================================
@@ -161,4 +164,4 @@ def get_contacts():
 # app.run(port=5000, host='192.168.100.16', debug=True)
 if __name__ == '__main__':
     app_with_socketio = socketio.WSGIApp(sio, app)
-    eventlet.wsgi.server(eventlet.listen(('192.168.0.37', 5000)), app_with_socketio)
+    eventlet.wsgi.server(eventlet.listen((local_ip, 5000)), app_with_socketio)
