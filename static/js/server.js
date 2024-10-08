@@ -1,4 +1,4 @@
-export const server = axios.create({ baseURL: 'http://192.168.100.16:5000/' });
+export const server = axios.create({ baseURL: 'http://192.168.0.37:5000/' });
 
 server.interceptors.request.use((config) => {
 	config.headers.Authorization = `Bearer ${localStorage.getItem('authToken')}`;
@@ -8,7 +8,8 @@ server.interceptors.request.use((config) => {
 server.interceptors.response.use(undefined, (err) => {
 	if (err.response?.status === 401) {
 		localStorage.removeItem('authToken');
-		// window.location.href('login_page/login.html');
+		window.location.href = '/';
 	}
+
 	return Promise.reject(err);
 });

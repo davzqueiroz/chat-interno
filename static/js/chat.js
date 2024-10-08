@@ -3,7 +3,8 @@ const messages_contacts = new Map();
 const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
 const input_message = document.getElementById('input-message');
-const socket = io('http://192.168.100.16:5000/', {
+
+const socket = io('http://192.168.0.37:5000/', {
 	extraHeaders: {
 		Authorization: localStorage.getItem('authToken'),
 	},
@@ -20,12 +21,25 @@ socket.on('disconnect', () => {
 	//Fazer
 	localStorage.removeItem('authToken');
 	window.location.href = '/';
-	//
 });
 
 socket.io.on('reconnect', () => {});
 
+socket.on('receive_client_connections', (client_connections) => {
+	console.log(client_connections);
+	
+	client_connections.forEach(element => {
+		console.log(Object.keys(element));
+	});
+	
+});
+
+// ==================================== Evento para receber mensagens ================================ //
+// ==================================== Evento para receber mensagens ================================ //
+// ==================================== Evento para receber mensagens ================================ //
+
 socket.on('message', (data) => {
+
 	if (!messages_contacts.has(data['author_id'])) messages_contacts.set(data['author_id'], []);
 	const history = messages_contacts.get(data['author_id']);
 	history.push({
@@ -44,7 +58,18 @@ socket.on('message', (data) => {
 	}
 });
 
-const user_data = jwt_decode(localStorage.getItem('authToken'));
+const token = localStorage.getItem("authToken");
+if(!token) window.location.href = "/";
+
+const user_data = (()=>{
+    try {
+   		return jwt_decode(token);
+  } catch(error){
+		window.location.href = "/";
+}
+})()
+
+
 
 // ======================== Função para alterar entre contatos e configurações ======================= //
 // ======================== Função para alterar entre contatos e configurações ======================= //
@@ -125,6 +150,52 @@ document.addEventListener('DOMContentLoaded', async (event) => {
 	foto_user.src = 'https://github.com/davzqueiroz.png';
 });
 
+// ============================================ Grupos dinâmicos ===================================== //
+// ============================================ Grupos dinâmicos ===================================== //
+// ============================================ Grupos dinâmicos ===================================== //
+
+var contato_atual = '';
+
+async function get_groups() {
+	try {
+		const { data } = await server('/get_groups');
+
+		for (const group of data) {
+			const grupo = document.createElement('li');
+			grupo.innerText = 'GRUPO - ' + group['nome'];
+
+			const statusSpan = document.createElement('span');
+    		statusSpan.classList.add('status');
+    		statusSpan.classList.add('online');
+			grupo.prepend(statusSpan);
+
+			grupo.addEventListener('click', function editContactName() {
+
+				document.getElementById('nome-contato').innerText = group['nome'];
+				showMessages(group);
+
+				botao_enviar.onclick = function () {
+					insertMessageHTML(group);
+				};
+
+				input_message.onkeydown = (event) => {
+					if (event.key == 'Enter' && !event.shiftKey) {
+						event.preventDefault();
+						insertMessageHTML(group);
+					}
+				};
+
+				contato_atual = group;
+
+			});
+
+			lista.appendChild(grupo);
+		}
+	} catch (error) {
+		console.log(error);
+	}
+}
+
 // =========================================== Contatos dinâmicos ==================================== //
 // =========================================== Contatos dinâmicos ==================================== //
 // =========================================== Contatos dinâmicos ==================================== //
@@ -140,19 +211,30 @@ async function get_contacts() {
 			if (contact['id'] == user_data['id']) continue;
 			const contato = document.createElement('li');
 			contato.innerText = contact['nome'];
+
+			const statusSpan = document.createElement('span');
+    		statusSpan.classList.add('status');
+    		statusSpan.classList.add('offline');
+			contato.prepend(statusSpan);
+
 			contato.addEventListener('click', function editContactName() {
+
 				document.getElementById('nome-contato').innerText = contact['nome'];
 				showMessages(contact);
+
 				botao_enviar.onclick = function () {
 					insertMessageHTML(contact);
 				};
+
 				input_message.onkeydown = (event) => {
 					if (event.key == 'Enter' && !event.shiftKey) {
 						event.preventDefault();
 						insertMessageHTML(contact);
 					}
 				};
+
 				contato_atual = contact;
+
 			});
 
 			lista.appendChild(contato);
@@ -162,6 +244,7 @@ async function get_contacts() {
 	}
 }
 
+get_groups();
 get_contacts();
 
 // ======================================= Mensagens dinâmicas ======================================== //
@@ -176,7 +259,6 @@ async function showMessages(contact) {
 	}
 	try {
 		const { data } = await server.post('/get_messages', {
-			my_id: user_data['id'],
 			is_group: false,
 			id_target: contact['id'],
 			group_name: '',
