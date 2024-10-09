@@ -4,55 +4,61 @@ const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
 const input_message = document.getElementById('input-message');
 
-const socket = io('http://192.168.100.16:5000/', {
+const socket = io('http://192.168.0.37:5000/', {
 	extraHeaders: {
 		Authorization: localStorage.getItem('authToken'),
 	},
 });
 
 socket.on('connect', () => {
-	// console.log(socket); // true
-	// EXIBIR PRO USUARIO SE ELE ESTÁ CONECTADO
+	
 });
 
 socket.on('disconnect', () => {
-	// EXIBIR PRO USUARIO SE ELE ESTÁ DESCONECTADO
-	// console.log(socket.connected); // false
-	//Fazer
 	localStorage.removeItem('authToken');
 	window.location.href = '/';
 });
 
 socket.io.on('reconnect', () => {});
 
+// ============================ Evento para receber clientes conectados ============================== //
+// ============================ Evento para receber clientes conectados ============================== //
+// ============================ Evento para receber clientes conectados ============================== //
+
 socket.on('receive_client_connections', (client_connections) => {
-	console.log(client_connections);
-
-	const listaContatos = lista.getElementsByTagName('li');
-	const listaStatus = lista.getElementsByTagName('span');
-
-	for (let i = 0; i < listaContatos.length; i++) {
-		listaContatos[i].innerText;
-
-		client_connections.forEach((element) => {
-			const nome = element[Object.keys(element)]['nome'];
-			if (nome == listaContatos[i].innerText) {
-				listaStatus[i].classList.remove('offline');
-				listaStatus[i].classList.add('online');
-			}
-			if (nome !== listaContatos[i].innerText) {
-				listaStatus[i].classList.remove('online');
-				listaStatus[i].classList.add('offline');
-			}
-		});
+	let listaContatos = Array.from(lista.getElementsByTagName('li'));
+	if (listaContatos.length <= 0){
+		setTimeout(loadStatus(client_connections, listaContatos), 100)
+		return 
 	}
+	loadStatus(client_connections, listaContatos)
 });
+
+function loadStatus(client_connections, listaContatos) {
+	console.log(client_connections)
+	
+	listaContatos = listaContatos.filter((contact) => !contact.innerText.startsWith('GRUPO'))
+
+	listaContatos.forEach((contato) => {
+		const status = contato.querySelector('span')
+		if (client_connections.includes(contato.innerText)){
+			status.classList.remove('offline');
+			status.classList.add('online')
+		}
+		else {
+			status.classList.remove('online');
+			status.classList.add('offline')
+		}
+	})
+}
 
 // ==================================== Evento para receber mensagens ================================ //
 // ==================================== Evento para receber mensagens ================================ //
 // ==================================== Evento para receber mensagens ================================ //
 
 socket.on('message', (data) => {
+	console.log(data)
+
 	if (!messages_contacts.has(data['author_id'])) messages_contacts.set(data['author_id'], []);
 	const history = messages_contacts.get(data['author_id']);
 	history.push({
@@ -69,7 +75,14 @@ socket.on('message', (data) => {
 		document.getElementById('lista-mensagens').appendChild(mensagem);
 		document.querySelector('.messages-chat').scrollTop = document.querySelector('.messages-chat').scrollHeight;
 	}
+
+	// document.querySelector('.contact-panel ul li').style.backgroundColor = "#2c3999"
+
 });
+
+// ============================ Pegar informações do usuário através do token ======================== //
+// ============================ Pegar informações do usuário através do token ======================== //
+// ============================ Pegar informações do usuário através do token ======================== //
 
 const token = localStorage.getItem('authToken');
 if (!token) window.location.href = '/';
@@ -175,10 +188,10 @@ async function get_groups() {
 			const grupo = document.createElement('li');
 			grupo.innerText = 'GRUPO - ' + group['nome'];
 
-			const statusSpan = document.createElement('span');
-			statusSpan.classList.add('status');
-			statusSpan.classList.add('online');
-			grupo.prepend(statusSpan);
+			// const statusSpan = document.createElement('span');
+			// statusSpan.classList.add('status');
+			// statusSpan.classList.add('online');
+			// grupo.prepend(statusSpan);
 
 			grupo.addEventListener('click', function editContactName() {
 				document.getElementById('nome-contato').innerText = group['nome'];
@@ -194,7 +207,7 @@ async function get_groups() {
 						insertMessageHTML(group);
 					}
 				};
-
+				
 				contato_atual = group;
 			});
 
@@ -251,8 +264,8 @@ async function get_contacts() {
 	}
 }
 
-get_groups();
-get_contacts();
+get_groups().then(() => get_contacts());
+
 
 // ======================================= Mensagens dinâmicas ======================================== //
 // ======================================= Mensagens dinâmicas ======================================== //
@@ -262,6 +275,7 @@ async function showMessages(contact) {
 	lista_mensagens.innerText = '';
 	if (messages_contacts.has(contact['id'])) {
 		render_messages(messages_contacts.get(contact['id']));
+		
 		return;
 	}
 	try {
@@ -273,6 +287,7 @@ async function showMessages(contact) {
 
 		messages_contacts.set(contact['id'], data);
 		render_messages(data);
+
 	} catch (error) {
 		console.log(error);
 	}
@@ -289,6 +304,8 @@ function render_messages(messages) {
 		msg.innerText = element['content'];
 		lista_mensagens.appendChild(msg);
 	});
+	const messageContainer = document.querySelector('.messages-chat');
+	messageContainer.scrollTop = messageContainer.scrollHeight;
 }
 
 // ================================================ PAINEL DE ANEXO ========================================= //
