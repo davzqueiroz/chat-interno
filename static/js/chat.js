@@ -4,7 +4,7 @@ const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
 const input_message = document.getElementById('input-message');
 
-const socket = io('http://192.168.0.37:5000/', {
+const socket = io('http://192.168.100.16:5000/', {
 	extraHeaders: {
 		Authorization: localStorage.getItem('authToken'),
 	},
@@ -27,11 +27,25 @@ socket.io.on('reconnect', () => {});
 
 socket.on('receive_client_connections', (client_connections) => {
 	console.log(client_connections);
-	
-	client_connections.forEach(element => {
-		console.log(Object.keys(element));
-	});
-	
+
+	const listaContatos = lista.getElementsByTagName('li');
+	const listaStatus = lista.getElementsByTagName('span');
+
+	for (let i = 0; i < listaContatos.length; i++) {
+		listaContatos[i].innerText;
+
+		client_connections.forEach((element) => {
+			const nome = element[Object.keys(element)]['nome'];
+			if (nome == listaContatos[i].innerText) {
+				listaStatus[i].classList.remove('offline');
+				listaStatus[i].classList.add('online');
+			}
+			if (nome !== listaContatos[i].innerText) {
+				listaStatus[i].classList.remove('online');
+				listaStatus[i].classList.add('offline');
+			}
+		});
+	}
 });
 
 // ==================================== Evento para receber mensagens ================================ //
@@ -39,7 +53,6 @@ socket.on('receive_client_connections', (client_connections) => {
 // ==================================== Evento para receber mensagens ================================ //
 
 socket.on('message', (data) => {
-
 	if (!messages_contacts.has(data['author_id'])) messages_contacts.set(data['author_id'], []);
 	const history = messages_contacts.get(data['author_id']);
 	history.push({
@@ -58,18 +71,16 @@ socket.on('message', (data) => {
 	}
 });
 
-const token = localStorage.getItem("authToken");
-if(!token) window.location.href = "/";
+const token = localStorage.getItem('authToken');
+if (!token) window.location.href = '/';
 
-const user_data = (()=>{
-    try {
-   		return jwt_decode(token);
-  } catch(error){
-		window.location.href = "/";
-}
-})()
-
-
+const user_data = (() => {
+	try {
+		return jwt_decode(token);
+	} catch (error) {
+		window.location.href = '/';
+	}
+})();
 
 // ======================== Função para alterar entre contatos e configurações ======================= //
 // ======================== Função para alterar entre contatos e configurações ======================= //
@@ -165,12 +176,11 @@ async function get_groups() {
 			grupo.innerText = 'GRUPO - ' + group['nome'];
 
 			const statusSpan = document.createElement('span');
-    		statusSpan.classList.add('status');
-    		statusSpan.classList.add('online');
+			statusSpan.classList.add('status');
+			statusSpan.classList.add('online');
 			grupo.prepend(statusSpan);
 
 			grupo.addEventListener('click', function editContactName() {
-
 				document.getElementById('nome-contato').innerText = group['nome'];
 				showMessages(group);
 
@@ -186,7 +196,6 @@ async function get_groups() {
 				};
 
 				contato_atual = group;
-
 			});
 
 			lista.appendChild(grupo);
@@ -213,12 +222,11 @@ async function get_contacts() {
 			contato.innerText = contact['nome'];
 
 			const statusSpan = document.createElement('span');
-    		statusSpan.classList.add('status');
-    		statusSpan.classList.add('offline');
+			statusSpan.classList.add('status');
+			statusSpan.classList.add('offline');
 			contato.prepend(statusSpan);
 
 			contato.addEventListener('click', function editContactName() {
-
 				document.getElementById('nome-contato').innerText = contact['nome'];
 				showMessages(contact);
 
@@ -234,7 +242,6 @@ async function get_contacts() {
 				};
 
 				contato_atual = contact;
-
 			});
 
 			lista.appendChild(contato);
