@@ -16,6 +16,13 @@ class Hash_map:
     def has(self, key):
         return key in self.store
 
-    def get_all(self):
-        return self.store
+    def get_connections_name(self):
+        nomes_online = []
+        for chave in self.store:
+            nomes_online.append(self.get(chave)['nome'])
+        return nomes_online
 
+    def get_id_by_sid(self, sid):
+        for cliente in self.store:
+            if self.store.get(cliente)['sid'] == sid:
+                return cliente
