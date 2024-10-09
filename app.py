@@ -8,26 +8,17 @@ from backend.hash_map import Hash_map
 import socketio
 import eventlet
 import socket
+import time
 
 hostname = socket.gethostname()
 local_ip = socket.gethostbyname(hostname)
 client_connections = Hash_map()
 
-
-# try:
-#    pass
-# except jwt.ExpiredSignatureError:
-#    pass
-# print(jwt.decode(jwt=teste['Authorization'][7:], key='webchat', algorithms='HS256'))
-# return 'token'
-
 # =================================================== SOCKET.IO ========================================================
 # =================================================== SOCKET.IO ========================================================
 # =================================================== SOCKET.IO ========================================================
 
-# create a Socket.IO server
 sio = socketio.Server(cors_allowed_origins='*')
-# client_connections = []  # Dicionário para mapear identificação de conexão (request.sid) aos nomes dos clientes
 
 
 @sio.event
@@ -41,16 +32,13 @@ def connect(sid, environ):
     user_data = verificar_token(token)
     user_data['sid'] = sid
     client_connections.set(user_data["id"], user_data)
-    sio.emit('receive_client_connections', [client_connections.get_all()])
+    sio.emit('receive_client_connections', client_connections.get_connections_name())
 
 
 @sio.event
 def disconnect(sid):
-    for dic in client_connections.get_all():
-        if client_connections.get(dic)['sid'] == sid:
-            client_connections.delete(key=dic)
-            break
-    sio.emit('receive_client_connections', client_connections.get_all())
+    client_connections.delete(key=client_connections.get_id_by_sid(sid))
+    sio.emit('receive_client_connections', client_connections.get_connections_name())
 
 
 @sio.on('send_message')
