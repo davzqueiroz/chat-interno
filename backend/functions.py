@@ -60,14 +60,21 @@ def consulta_conversation_id(my_id, id_target):
         return id_pvs[0]
 
 
-def inserir_mensagem(conversation_id, author_id, message):
+def consulta_nome(id):
     with connection() as conn:
         cursor = conn.cursor()
-        cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now'), 'TEXT')")
+        consulta = cursor.execute(f"SELECT NOME FROM USUARIOS WHERE USER_ID = {id}").fetchone()
+        return consulta[0]
+
+
+def insert_message(conversation_id, author_id, message):
+    with connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now','localtime'), 'TEXT')")
         conn.commit()  # Ao enviar mensagens salvar no banco de dados
 
 
-def verificar_token(token):
+def verify_token(token):
     try:
         user_data = jwt.decode(token, "webchat", algorithms=["HS256"])
         return user_data
