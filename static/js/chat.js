@@ -35,7 +35,6 @@ socket.on('receive_client_connections', (client_connections) => {
 });
 
 function loadStatus(client_connections, listaContatos) {
-	console.log(client_connections)
 	
 	listaContatos = listaContatos.filter((contact) => !contact.innerText.startsWith('GRUPO'))
 
@@ -57,26 +56,42 @@ function loadStatus(client_connections, listaContatos) {
 // ==================================== Evento para receber mensagens ================================ //
 
 socket.on('message', (data) => {
-	console.log(data)
 
 	if (!messages_contacts.has(data['author_id'])) messages_contacts.set(data['author_id'], []);
 	const history = messages_contacts.get(data['author_id']);
 	history.push({
-		id: 3,
-		conversation_id: 3,
+		id: 0,
+		conversation_id: 0,
 		sender_id: data['author_id'],
 		content: data['message'],
 	});
 
 	if (data['author_id'] == contato_atual['id']) {
-		const mensagem = document.createElement('li');
-		mensagem.innerText = data['message'];
-		mensagem.classList.add('received');
-		document.getElementById('lista-mensagens').appendChild(mensagem);
-		document.querySelector('.messages-chat').scrollTop = document.querySelector('.messages-chat').scrollHeight;
+		const msg = document.createElement('li');
+        msg.classList.add('received');
+        
+        const msgContent = document.createElement('div');
+        msgContent.innerText = data['message'];
+        
+        const msgTime = document.createElement('span');
+        msgTime.classList.add('message-time');
+        msgTime.innerText = formatCurrentTime();
+
+        msg.appendChild(msgContent);
+        msg.appendChild(msgTime);
+
+        lista_mensagens.appendChild(msg);
+
+		const messageContainer = document.querySelector('.messages-chat');
+		messageContainer.scrollTop = messageContainer.scrollHeight;
 	}
 
-	// document.querySelector('.contact-panel ul li').style.backgroundColor = "#2c3999"
+	if (data['author_id'] !== contato_atual['id']) {
+		let listaContatos = Array.from(lista.getElementsByTagName('li'));
+		listaContatos.forEach((contato) => {
+			if(data['author_name'] == contato.innerText){contato.style.backgroundColor = "#344af0"}
+		})
+	}
 
 });
 
@@ -94,6 +109,8 @@ const user_data = (() => {
 		window.location.href = '/';
 	}
 })();
+
+document.getElementById('nome-contato').innerText = user_data['nome'];
 
 // ======================== Função para alterar entre contatos e configurações ======================= //
 // ======================== Função para alterar entre contatos e configurações ======================= //
@@ -128,18 +145,29 @@ document.getElementById('sair').addEventListener('click', () => {
 // =============================== Função para inserir mensagens no HTML ============================= //
 // =============================== Função para inserir mensagens no HTML ============================= //
 
-function insertMessageHTML(contato) {
+function insertMessageHTML(contato, is_group) {
 	const value_textbar = document.getElementById('input-message').value;
 	const mensagem = document.createElement('li');
 
 	if (value_textbar.trim() !== '') {
-		mensagem.innerText = value_textbar;
-		mensagem.classList.add('sended');
+		const msg = document.createElement('li');
+        msg.classList.add('sended');
+        
+        const msgContent = document.createElement('div');
+        msgContent.innerText = value_textbar;
+        
+        const msgTime = document.createElement('span');
+        msgTime.classList.add('message-time');
+        msgTime.innerText = formatCurrentTime();
 
-		document.getElementById('lista-mensagens').appendChild(mensagem);
+        msg.appendChild(msgContent);
+        msg.appendChild(msgTime);
+
+        lista_mensagens.appendChild(msg);
 
 		const messageContainer = document.querySelector('.messages-chat');
 		messageContainer.scrollTop = messageContainer.scrollHeight;
+
 	}
 
 	document.getElementById('input-message').value = '';
@@ -147,10 +175,11 @@ function insertMessageHTML(contato) {
 	if (!messages_contacts.has(contato['id'])) messages_contacts.set(contato['id'], []);
 	const history = messages_contacts.get(contato['id']);
 	history.push({
-		id: 3,
-		conversation_id: 3,
+		id: 0,
+		conversation_id: 0,
 		sender_id: user_data['id'],
 		content: value_textbar,
+		sent_at: getFormattedDate()
 	});
 
 	if (value_textbar.trim() !== '') {
@@ -159,6 +188,7 @@ function insertMessageHTML(contato) {
 			message: value_textbar,
 			author_id: user_data['id'],
 			conversation_id: '',
+			is_group: is_group
 		});
 	}
 
@@ -169,10 +199,7 @@ function insertMessageHTML(contato) {
 // ============================================ Foto dinâmica ======================================== //
 // ============================================ Foto dinâmica ======================================== //
 
-document.addEventListener('DOMContentLoaded', async (event) => {
-	const foto_user = document.getElementById('foto-usuario');
-	foto_user.src = 'https://github.com/davzqueiroz.png';
-});
+document.getElementById('foto-usuario').src = 'http://192.168.0.37:5000/static/images/usuarios/' + user_data['nome'] +'.png'
 
 // ============================================ Grupos dinâmicos ===================================== //
 // ============================================ Grupos dinâmicos ===================================== //
@@ -188,23 +215,20 @@ async function get_groups() {
 			const grupo = document.createElement('li');
 			grupo.innerText = 'GRUPO - ' + group['nome'];
 
-			// const statusSpan = document.createElement('span');
-			// statusSpan.classList.add('status');
-			// statusSpan.classList.add('online');
-			// grupo.prepend(statusSpan);
-
 			grupo.addEventListener('click', function editContactName() {
 				document.getElementById('nome-contato').innerText = group['nome'];
-				showMessages(group);
+				document.getElementById('foto-usuario').src = 'http://192.168.0.37:5000/static/images/usuarios/parcol.png'
+				document.querySelector('.input-msg').style.visibility = 'visible';
+				showMessages(group, true, group['nome']);
 
 				botao_enviar.onclick = function () {
-					insertMessageHTML(group);
+					insertMessageHTML(group, true);
 				};
 
 				input_message.onkeydown = (event) => {
 					if (event.key == 'Enter' && !event.shiftKey) {
 						event.preventDefault();
-						insertMessageHTML(group);
+						insertMessageHTML(group, true);
 					}
 				};
 				
@@ -241,16 +265,19 @@ async function get_contacts() {
 
 			contato.addEventListener('click', function editContactName() {
 				document.getElementById('nome-contato').innerText = contact['nome'];
-				showMessages(contact);
+				document.getElementById('foto-usuario').src = 'http://192.168.0.37:5000/static/images/usuarios/' + contact['nome'] +'.png'
+				document.querySelector('.input-msg').style.visibility = 'visible';
+				contato.style.backgroundColor = "#202b7a";
+				showMessages(contact, false, '');
 
 				botao_enviar.onclick = function () {
-					insertMessageHTML(contact);
+					insertMessageHTML(contact, false);
 				};
 
 				input_message.onkeydown = (event) => {
 					if (event.key == 'Enter' && !event.shiftKey) {
 						event.preventDefault();
-						insertMessageHTML(contact);
+						insertMessageHTML(contact, false);
 					}
 				};
 
@@ -271,20 +298,18 @@ get_groups().then(() => get_contacts());
 // ======================================= Mensagens dinâmicas ======================================== //
 // ======================================= Mensagens dinâmicas ======================================== //
 
-async function showMessages(contact) {
+async function showMessages(contact, is_group, group_name) {
 	lista_mensagens.innerText = '';
 	if (messages_contacts.has(contact['id'])) {
 		render_messages(messages_contacts.get(contact['id']));
-		
 		return;
 	}
 	try {
 		const { data } = await server.post('/get_messages', {
-			is_group: false,
+			is_group: is_group,
 			id_target: contact['id'],
-			group_name: '',
+			group_name: group_name,
 		});
-
 		messages_contacts.set(contact['id'], data);
 		render_messages(data);
 
@@ -297,15 +322,63 @@ async function showMessages(contact) {
 // ========================================= RENDERIZAR AS MENSAGENS NO HTML ============================== //
 // ========================================= RENDERIZAR AS MENSAGENS NO HTML ============================== //
 
-function render_messages(messages) {
+function render_messages(messages, is_group) {
+
 	messages.forEach((element) => {
 		const msg = document.createElement('li');
-		msg.classList.add(element['sender_id'] == user_data['id'] ? 'sended' : 'received');
-		msg.innerText = element['content'];
-		lista_mensagens.appendChild(msg);
+        msg.classList.add(element['sender_id'] == user_data['id'] ? 'sended' : 'received');
+        
+        const msgContent = document.createElement('div');
+        msgContent.innerText = element['content'];
+        
+        const msgTime = document.createElement('span');
+        msgTime.classList.add('message-time');
+		if (is_group && element['sender_id'] == user_data['id']) {msgTime.innerText = user_data['nome'] + ' - ' + formatTime(element['sent_at'])}
+        else if (is_group && element['sender_id'] !== user_data['id'] ) {msgTime.innerText = 'Outro usuário - ' + formatTime(element['sent_at'])}
+		else if (!is_group) {msgTime.innerText = formatTime(element['sent_at'])}
+
+        msg.appendChild(msgContent);
+        msg.appendChild(msgTime);
+
+        lista_mensagens.appendChild(msg);
 	});
 	const messageContainer = document.querySelector('.messages-chat');
 	messageContainer.scrollTop = messageContainer.scrollHeight;
+}
+
+// ============================================== FORMATAR HORARIOS ========================================= //
+// ============================================== FORMATAR HORARIOS ========================================= //
+// ============================================== FORMATAR HORARIOS ========================================= //
+
+function formatTime(timestamp) {
+    const [datePart, timePart] = timestamp.split(' ');
+    const [year, month, day] = datePart.split('-');
+    const [hours, minutes] = timePart.split(':');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
+function formatCurrentTime() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0'); 
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
+function getFormattedDate() {
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); 
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 // ================================================ PAINEL DE ANEXO ========================================= //

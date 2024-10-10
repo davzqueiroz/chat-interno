@@ -258,7 +258,7 @@ body * {
 	height: 70%;
 	margin-left: 1vw;
 	margin-top: 0.65vw;
-	border-radius: 100px;
+	border-radius: 50%;
 }
 
 /* ============================================== CSS DO MESSAGES-CHAT ======================================= */
@@ -303,6 +303,14 @@ body * {
 	margin-right: 1vw;
 }
 
+.message-time {
+    font-size: 12px;
+    color: #888;
+    display: block;
+    margin-top: 5px;
+    text-align: right;
+}
+
 .messages-chat::-webkit-scrollbar {
 	display: none; /* Para navegadores WebKit (Chrome, Safari) */
 	scroll-behavior: smooth;
@@ -321,6 +329,7 @@ body * {
 	justify-content: space-between; /* Permite adicionar objetos nas laterais */
 	padding: 10px; /* Espaço interno para o conteúdo */
 	box-sizing: border-box;
+	visibility: hidden;
 }
 
 .type-text {
