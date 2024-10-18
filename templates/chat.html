@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Chat Parcol</title>
+		<title id="title-page">Chat Parcol</title>
 		<link rel="stylesheet" href="{{url_for('static', filename='css/chat.css')}}" />
 	</head>
 
@@ -33,9 +33,7 @@
 					/>
 					<h2>Configurações</h2>
 				</div>
-				<ul>
-					<li id="sair">Sair</li>
-					<!-- Outras opções de configuração -->
+				<ul id="lista-opcoes">
 				</ul>
 			</div>
 
@@ -50,7 +48,7 @@
 						<h2 id="nome-contato">Nome do contato</h2>
 					</div>
 
-					<div class="messages-chat">
+					<div class="messages-chat" id="div-messages-chat">
 						<ul id="lista-mensagens"></ul>
 					</div>
 				</div>

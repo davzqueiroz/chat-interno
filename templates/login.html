@@ -3,12 +3,13 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Document</title>
+		<title>Chat - Parcol</title>
 		<link rel="stylesheet" href="{{url_for('static', filename='css/login.css')}}" />
 	</head>
 
 	<body>
 		<div class="main-login">
+
 			<div class="left-login">
 				<h1>
 					Faça login <br />
@@ -16,6 +17,16 @@
 				</h1>
 				<img src="{{url_for('static', filename='css/team-work.svg')}}" class="team-work-img" alt="team-work" />
 			</div>
+
+			<div id="overlay" class="overlay">
+
+				<div class="erro-login" id="erro-login">
+					<input type="image" src="{{url_for('static', filename='images/x.png')}}" id="x-image">
+					<h2 id="h2-erro-login"></h2>
+					<img src="{{url_for('static', filename='css/401-error.svg')}}" class="error-401-img" alt="error-401" />
+				</div>
+
+			</div>			
 
 			<div class="right-login">
 				<div class="card-login">
@@ -26,10 +37,11 @@
 						<input type="text" id="username" name="usuario" placeholder="Usuário..." />
 					</div>
 					<div class="textfield">
-						<label for="senha">Senha</label>
+						<label for="senha" id="input-senha">Senha</label>
 						<input type="password" id="password" name="senha" placeholder="Senha..." />
 					</div>
 					<button class="button-login" id="button-login">Login</button>
+
 				</div>
 			</div>
 		</div>
