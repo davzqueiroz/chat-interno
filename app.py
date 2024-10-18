@@ -48,21 +48,22 @@ def send_message(sid, data):
         conversation_id = consulta_conversation_id(author_id, target_id)
         insert_message(conversation_id, author_id, message)
         if client_connections.has(target_id):
-            data = {'target_id': target_id, 'message': message, 'author': sid, 'author_id': author_id, 'author_name': consulta_nome(author_id)}
+            data = {'target_id': target_id, 'message': message, 'author': sid, 'author_id': author_id,
+                    'author_name': consulta_nome(author_id), 'is_group': data['is_group'],
+                    'group_name': consulta_nome(target_id)}
             sio.emit("message", data)
 
     elif data['is_group'] is True:
         insert_message(target_id, author_id, message)
-        data = {'target_id': target_id, 'message': message, 'author': sid, 'author_id': author_id, 'author_name': consulta_nome(author_id)}
+        data = {'target_id': target_id, 'message': message, 'author': sid, 'author_id': author_id,
+                'author_name': consulta_nome(author_id), 'is_group': data['is_group'],
+                'group_name': consulta_nome(target_id)}
         sio.emit("message", data)
 
 
-
-
 # ===================================================== FLASK ==========================================================
 # ===================================================== FLASK ==========================================================
 # ===================================================== FLASK ==========================================================
-
 
 app = Flask(__name__)
 app.config['SECRET_KE'] = 'secret!'
@@ -99,7 +100,7 @@ def login():
         else:
             if bcrypt.checkpw(password.encode(), consulta_usuario[2]):
                 expiration = datetime.now() + timedelta(hours=9)
-                token = jwt.encode(payload={'id': consulta_usuario[0], 'nome': consulta_usuario[3], 'exp': expiration},
+                token = jwt.encode(payload={'id': consulta_usuario[0], 'nome': consulta_usuario[3], 'nivel': consulta_usuario[4], 'exp': expiration},
                                    key='webchat', algorithm='HS256')
                 return jsonify({'token': token}), 200
             else:
