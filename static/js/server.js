@@ -8,7 +8,7 @@ server.interceptors.request.use((config) => {
 server.interceptors.response.use(undefined, (err) => {
 	if (err.response?.status === 401) {
 		localStorage.removeItem('authToken');
-		window.location.href = '/';
+		// window.location.href = '/';
 	}
 
 	return Promise.reject(err);

@@ -31,16 +31,15 @@ body * {
 	box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 	z-index: 999;
 	border-right: 1px solid rgba(255, 255, 255, 0.1);
-	border-radius: 10px;
+	border-radius: 2%;
 	transition: opacity 0.5s ease, visibility 0.5s ease;
 	opacity: 0;
 	visibility: hidden;
-	z-index: 1;
 }
 
 .status {
-    width: 10px;
-    height: 10px;
+    width: 0.5vw;
+    height: 1vh;
     border-radius: 50%;
     display: inline-block;
     margin-right: 10px; 
@@ -69,12 +68,12 @@ body * {
 	padding: 20px;
 	background-color: #0f173d; 
 	color: white;
-	border-radius: 10px;
+	border-radius: 2%;
 }
 
 .contact-panel h2 {
 	margin: 0;
-	font-size: 160%;
+	font-size: 1.4vw;
 }
 
 .contact-panel ul {
@@ -92,7 +91,7 @@ body * {
 	margin-bottom: 10px;
 	background-color: #202b7a; 
 	border-radius: 8px;
-	font-size: 16px;
+	font-size: 0.9vw;
 	color: white;
 	cursor: pointer;
 	transition: background-color 0.3s ease, box-shadow 0.3s ease;
@@ -111,6 +110,7 @@ body * {
 	display: flex;
 	width: 100%;
 	position: relative;
+	border-radius: 5%;
 }
 
 .panel-header > h2 {
@@ -168,7 +168,7 @@ body * {
 
 .settings-panel h2 {
 	margin: 0;
-	font-size: 22px;
+	font-size: 1.4vw;
 }
 
 .settings-panel ul {
@@ -186,7 +186,7 @@ body * {
 	margin-bottom: 10px;
 	background-color: #202b7a;
 	border-radius: 8px;
-	font-size: 16px;
+	font-size: 0.9vw;
 	color: white;
 	cursor: pointer;
 	transition: background-color 0.3s ease, box-shadow 0.3s ease;
@@ -217,10 +217,10 @@ body * {
 	z-index: 999;
 	border-right: 1px solid rgba(255, 255, 255, 0.1);
 	border-radius: 10px;
-	display: flex; /* Flexbox para controlar o layout interno */
-	flex-direction: column; /* Alinha itens verticalmente */
-	justify-content: space-between; /* Empurra o conteúdo para a parte inferior */
-	padding: 0; /* Adiciona algum espaço interno */
+	display: flex; 
+	flex-direction: column; 
+	justify-content: space-between; 
+	padding: 0; 
 }
 
 /* ============================================== CSS DO CONTACT-DATA ======================================= */
@@ -240,10 +240,10 @@ body * {
 	display: flex;
 	background-color: #202b7a;
 	border: none;
-	width: 100%; /* Garante que a div ocupe 100% da largura do contêiner pai */
-	padding: 0; /* Remova qualquer padding que possa estar causando o espaço */
-	margin: 0; /* Remova qualquer margem indesejada */
-	box-sizing: border-box; /* Certifique-se de que padding e border sejam incluídos na largura total */
+	width: 100%; 
+	padding: 0; 
+	margin: 0; 
+	box-sizing: border-box; 
 	border-radius: 10px 10px 0 0;
 	align-self: flex-start;
 }
@@ -257,7 +257,8 @@ body * {
 	width: 5%;
 	height: 70%;
 	margin-left: 1vw;
-	margin-top: 0.65vw;
+	margin-top: 1.2vh;
+	margin-bottom: 1vh;
 	border-radius: 50%;
 }
 
@@ -266,6 +267,8 @@ body * {
 /* ============================================== CSS DO MESSAGES-CHAT ======================================= */
 
 .messages-chat {
+	display: flex;
+	position: relative;
 	overflow-y: auto;
 	height: 100%;
 	margin-top: 1vh;
@@ -316,6 +319,40 @@ body * {
 	scroll-behavior: smooth;
 }
 
+.msg-aviso {
+	display: flex;
+	position: absolute;
+	width: 25vw;
+	height: 95%;
+	background: red;
+	z-index: 5;
+	margin-top: 3%;
+	margin-left: 3%;
+	border-radius: 3%;
+}
+
+.listacontatos-aviso {
+	display: flex;
+	position: absolute;
+	width: 25vw;
+	height: 95%;
+	z-index: 5;
+	left: 55%;
+	margin-top: 3%;
+	margin-right: 3%;
+	border-radius: 3%;
+	background-color: #243692; 
+	color: white;
+	box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.listacontatos-aviso .panel-header {
+	padding: 20px;
+	background-color: #0f173d; 
+	color: white;
+	border-radius: 2%;
+}
+
 /* ============================================== CSS DO INPUT-MSG ======================================= */
 /* ============================================== CSS DO INPUT-MSG ======================================= */
 /* ============================================== CSS DO INPUT-MSG ======================================= */
@@ -325,15 +362,15 @@ body * {
 	border-radius: 0 0 10px 10px;
 	width: 100%;
 	display: flex;
-	align-items: center; /* Centraliza o conteúdo verticalmente */
-	justify-content: space-between; /* Permite adicionar objetos nas laterais */
-	padding: 10px; /* Espaço interno para o conteúdo */
+	align-items: center; 
+	justify-content: space-between; 
+	padding: 10px; 
 	box-sizing: border-box;
 	visibility: hidden;
 }
 
 .type-text {
-	width: 95%; /* Ajusta a largura do input para deixar espaço nas laterais */
+	width: 95%; 
 	height: 80%;
 	border: none;
 	border-radius: 10px;
@@ -344,7 +381,7 @@ body * {
 	box-shadow: 0px 10px 40px #00000056;
 	outline: none;
 	box-sizing: border-box;
-	margin-right: 1vw; /* Espaço entre o input e o próximo elemento à direita */
+	margin-right: 1vw;
 	margin-left: 1vw;
 	resize: none;
 }

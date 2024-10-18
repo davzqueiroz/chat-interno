@@ -24,8 +24,21 @@ async function login() {
 			response: { data },
 		} = error;
 
-		if (status === 401) return alert(data.error);
+		if (status === 401) {
+			document.getElementById('h2-erro-login').innerText = data.error;
+			document.getElementById('overlay').style.visibility = 'visible';
+		}
 	}
-}
+};
 
+function close() {
+	document.getElementById('overlay').style.visibility = 'hidden';
+};
+
+document.getElementById('x-image').addEventListener('click', close)
 document.getElementById('button-login').addEventListener('click', login);
+document.getElementById('password').addEventListener('keypress', function (event) {
+	if (event.key == 'Enter'){
+		login()
+	};
+});

@@ -3,6 +3,7 @@ const messages_contacts = new Map();
 const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
 const input_message = document.getElementById('input-message');
+const lista = document.getElementById('lista-contatos');
 
 const socket = io('http://192.168.0.37:5000/', {
 	extraHeaders: {
@@ -28,7 +29,7 @@ socket.io.on('reconnect', () => {});
 socket.on('receive_client_connections', (client_connections) => {
 	let listaContatos = Array.from(lista.getElementsByTagName('li'));
 	if (listaContatos.length <= 0){
-		setTimeout(loadStatus(client_connections, listaContatos), 100)
+		setTimeout(loadStatus(client_connections, listaContatos), 150)
 		return 
 	}
 	loadStatus(client_connections, listaContatos)
@@ -55,45 +56,94 @@ function loadStatus(client_connections, listaContatos) {
 // ==================================== Evento para receber mensagens ================================ //
 // ==================================== Evento para receber mensagens ================================ //
 
+const audio_notify = new Audio('static/audios/new_message.mp3')
+audio_notify.volume = 0.2
+
 socket.on('message', (data) => {
-
-	if (!messages_contacts.has(data['author_id'])) messages_contacts.set(data['author_id'], []);
-	const history = messages_contacts.get(data['author_id']);
-	history.push({
-		id: 0,
-		conversation_id: 0,
-		sender_id: data['author_id'],
-		content: data['message'],
-	});
-
-	if (data['author_id'] == contato_atual['id']) {
-		const msg = document.createElement('li');
-        msg.classList.add('received');
-        
-        const msgContent = document.createElement('div');
-        msgContent.innerText = data['message'];
-        
-        const msgTime = document.createElement('span');
-        msgTime.classList.add('message-time');
-        msgTime.innerText = formatCurrentTime();
-
-        msg.appendChild(msgContent);
-        msg.appendChild(msgTime);
-
-        lista_mensagens.appendChild(msg);
-
-		const messageContainer = document.querySelector('.messages-chat');
-		messageContainer.scrollTop = messageContainer.scrollHeight;
+	// INSERE AS MENSAGENS NA MEMÓRIA LOCAL CASO JÁ TENHA CONSULTADO NO BANCO
+	if (!data['is_group']) {
+		if (messages_contacts.has(data['author_id'])) {
+			const history = messages_contacts.get(data['author_id']);
+			history.push({
+				id: 0,
+				conversation_id: 0,
+				sender_id: data['author_id'],
+				content: data['message'],
+				sent_at: getFormattedDate()
+			});
+		}
+	}
+	
+	else if (data['is_group']){
+		if (messages_contacts.has(data['target_id'])) {
+			const history = messages_contacts.get(data['target_id']);
+			history.push({
+				id: 0,
+				conversation_id: 0,
+				sender_id: data['author_id'],
+				content: data['message'],
+				sent_at: getFormattedDate(),
+				author_name: data['author_name']
+			});
+		}
 	}
 
-	if (data['author_id'] !== contato_atual['id']) {
+	// SE A PESSOA QUE ENVIOU A MENSAGEM FOR A MESMA QUE SUA CONVERSA ESTÁ ABERTA, CARREGA A MENSAGEM NO HTML
+	if (data['author_id'] == contato_atual['id'] && !data['is_group']) {
+		insertReceivedHTML(data)
+	}
+
+	// SE FOR GRUPO E A MENSAGEM FOR PARA O GRUPO QUE VOCÊ ESTEJA ABERTO, CARREGA A MENSAGEM NO HTML
+	if (data['is_group'] && data['target_id'] == contato_atual['id'] && data['author_id'] !== user_data['id']) {
+		insertReceivedHTML(data)
+	}
+
+	// EMITE NOTIFICAÇÃO CASO A MENSAGEM SEJA PARA A CONVERSA QUE NAO ESTÁ ABERTA
+	if (data['author_id'] !== contato_atual['id'] && data['author_id'] !== user_data['id']) {
+		console.log(lista);
 		let listaContatos = Array.from(lista.getElementsByTagName('li'));
 		listaContatos.forEach((contato) => {
-			if(data['author_name'] == contato.innerText){contato.style.backgroundColor = "#344af0"}
-		})
-	}
 
+			if(data['author_name'] == contato.innerText && !data['is_group']){
+				contato.style.backgroundColor = "#344af0"
+				audio_notify.play()
+			}
+
+			else if (data['is_group'] && 'GRUPO - ' + contato_atual['nome'] !== 'GRUPO - ' + data['group_name']){
+				if('GRUPO - ' + data['group_name'] == contato.innerText){
+					contato.style.backgroundColor = "#344af0"
+					audio_notify.play()
+				}
+			}
+		})
+
+
+	}
 });
+
+function insertReceivedHTML(data) {
+	const msg = document.createElement('li');
+	msg.classList.add('received');
+	
+	const msgContent = document.createElement('div');
+	msgContent.innerText = data['message'];
+	
+	const msgTime = document.createElement('span');
+	msgTime.classList.add('message-time');
+
+	if (data['is_group']){
+		msgTime.innerText = data['author_name'] + ' - ' + formatCurrentTime();
+	}
+	else {msgTime.innerText = formatCurrentTime()}
+
+	msg.appendChild(msgContent);
+	msg.appendChild(msgTime);
+
+	lista_mensagens.appendChild(msg);
+
+	const messageContainer = document.querySelector('.messages-chat');
+	messageContainer.scrollTop = messageContainer.scrollHeight;
+}
 
 // ============================ Pegar informações do usuário através do token ======================== //
 // ============================ Pegar informações do usuário através do token ======================== //
@@ -111,6 +161,7 @@ const user_data = (() => {
 })();
 
 document.getElementById('nome-contato').innerText = user_data['nome'];
+document.getElementById('title-page').innerText = 'Chat Parcol - ' + user_data['nome']
 
 // ======================== Função para alterar entre contatos e configurações ======================= //
 // ======================== Função para alterar entre contatos e configurações ======================= //
@@ -132,14 +183,63 @@ function togglePanel() {
 document.getElementById('settingsButton').addEventListener('click', togglePanel);
 document.getElementById('contactsButton').addEventListener('click', togglePanel);
 
-// ======================================= Função para logout ======================================== //
-// ======================================= Função para logout ======================================== //
-// ======================================= Função para logout ======================================== //
+// Adicionando opções dinamicamente
+const lista_opcoes = document.getElementById('lista-opcoes')
+
+let option = document.createElement('li');
+option.innerText = 'Enviar aviso'
+option.id = 'enviar-aviso'
+lista_opcoes.appendChild(option)
+
+if (user_data['nivel'] == 2) {
+	let option = document.createElement('li');
+	option.innerText = "Criar novo usuário"
+	option.id = 'novo-usuario'
+	lista_opcoes.appendChild(option)
+}
+
+option = document.createElement('li');
+option.innerText = 'Sair'
+option.id = 'sair'
+lista_opcoes.appendChild(option)
+
+// ============================== Funções para painel de configurações =============================== //
+// ============================== Funções para painel de configurações =============================== //
+// ============================== Funções para painel de configurações =============================== //
+
+document.getElementById('enviar-aviso').addEventListener('click', () => {
+
+	let msgDiv = document.createElement('div');
+	msgDiv.classList.add('msg-aviso');
+	
+
+	let panelHeaderDiv = document.createElement('div');
+	panelHeaderDiv.classList.add('panel-header')
+	panelHeaderDiv.id = "panel-header-msgaviso"
+
+	let listaContatosDiv = document.createElement('div');
+	listaContatosDiv.classList.add('listacontatos-aviso');	
+
+	document.querySelector('.msg-aviso').appendChild(panelHeaderDiv)
+	document.querySelector('.listacontatos-aviso').appendChild(panelHeaderDiv)
+
+
+	
+	document.getElementById('div-messages-chat').appendChild(msgDiv);
+	document.getElementById('div-messages-chat').appendChild(listaContatosDiv);
+
+});
 
 document.getElementById('sair').addEventListener('click', () => {
 	localStorage.removeItem('authToken');
 	window.location.href = '/';
 });
+
+if (user_data['nivel'] == 2) {
+document.getElementById('novo-usuario').addEventListener('click', () => {
+	// Adicionar lógica para exibir painel de criação de usuário
+});
+}
 
 // =============================== Função para inserir mensagens no HTML ============================= //
 // =============================== Função para inserir mensagens no HTML ============================= //
@@ -147,7 +247,6 @@ document.getElementById('sair').addEventListener('click', () => {
 
 function insertMessageHTML(contato, is_group) {
 	const value_textbar = document.getElementById('input-message').value;
-	const mensagem = document.createElement('li');
 
 	if (value_textbar.trim() !== '') {
 		const msg = document.createElement('li');
@@ -220,6 +319,7 @@ async function get_groups() {
 				document.getElementById('foto-usuario').src = 'http://192.168.0.37:5000/static/images/usuarios/parcol.png'
 				document.querySelector('.input-msg').style.visibility = 'visible';
 				showMessages(group, true, group['nome']);
+				grupo.style.backgroundColor = "#202b7a";
 
 				botao_enviar.onclick = function () {
 					insertMessageHTML(group, true);
@@ -245,9 +345,6 @@ async function get_groups() {
 // =========================================== Contatos dinâmicos ==================================== //
 // =========================================== Contatos dinâmicos ==================================== //
 // =========================================== Contatos dinâmicos ==================================== //
-
-var contato_atual = '';
-const lista = document.getElementById('lista-contatos');
 
 async function get_contacts() {
 	try {
@@ -300,21 +397,32 @@ get_groups().then(() => get_contacts());
 
 async function showMessages(contact, is_group, group_name) {
 	lista_mensagens.innerText = '';
+
 	if (messages_contacts.has(contact['id'])) {
-		render_messages(messages_contacts.get(contact['id']));
+		render_messages(messages_contacts.get(contact['id']), is_group);
 		return;
 	}
+
+	try {
+		const data = await get_messages(contact, is_group, group_name)
+		messages_contacts.set(contact['id'], data);
+		render_messages(data, is_group);
+
+	} catch (error) {
+		console.log(error);
+	}
+}
+
+async function get_messages(contact, is_group, group_name){
 	try {
 		const { data } = await server.post('/get_messages', {
 			is_group: is_group,
 			id_target: contact['id'],
 			group_name: group_name,
 		});
-		messages_contacts.set(contact['id'], data);
-		render_messages(data);
-
+		return data
 	} catch (error) {
-		console.log(error);
+		return []
 	}
 }
 
@@ -333,8 +441,8 @@ function render_messages(messages, is_group) {
         
         const msgTime = document.createElement('span');
         msgTime.classList.add('message-time');
-		if (is_group && element['sender_id'] == user_data['id']) {msgTime.innerText = user_data['nome'] + ' - ' + formatTime(element['sent_at'])}
-        else if (is_group && element['sender_id'] !== user_data['id'] ) {msgTime.innerText = 'Outro usuário - ' + formatTime(element['sent_at'])}
+		if (is_group && element['sender_id'] == user_data['id']) {msgTime.innerText = formatTime(element['sent_at'])}
+        else if (is_group && element['sender_id'] !== user_data['id'] ) {msgTime.innerText = element['author_name'] + ' - ' + formatTime(element['sent_at'])}
 		else if (!is_group) {msgTime.innerText = formatTime(element['sent_at'])}
 
         msg.appendChild(msgContent);
