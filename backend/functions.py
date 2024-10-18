@@ -35,10 +35,10 @@ def consultar_mensagens(my_id, is_group, id_target=None, group_name=None):
 
         if conversation_target == 0: return []
 
-        consulta_mensagens = cursor.execute(f"SELECT * FROM MESSAGES WHERE CONVERSATION_ID = {conversation_target} ORDER BY SENT_AT").fetchall()
+        consulta_mensagens = cursor.execute(f"SELECT * FROM (SELECT * FROM MESSAGES WHERE CONVERSATION_ID = {conversation_target} ORDER BY SENT_AT DESC LIMIT 20) AS SUBQUERY ORDER BY SENT_AT ASC").fetchall()
         mensagens = []
         for mensagem in consulta_mensagens:
-            mensagens.append({'id': mensagem[0], 'conversation_id': mensagem[1], 'sender_id': mensagem[2], 'content': mensagem[3], 'sent_at': mensagem[4], 'type': mensagem[5]})
+            mensagens.append({'id': mensagem[0], 'conversation_id': mensagem[1], 'sender_id': mensagem[2], 'content': mensagem[3], 'sent_at': mensagem[4], 'type': mensagem[5], 'author_name': consulta_nome(mensagem[2])})
         return mensagens
 
         # print(cursor.execute(f"SELECT CONVERSATION_ID FROM CONVERSATIONS WHERE IS_GROUP = {is_group} AND CONVERSATION_ID IN ({retorno})").fetchall())
@@ -63,8 +63,12 @@ def consulta_conversation_id(my_id, id_target):
 def consulta_nome(id):
     with connection() as conn:
         cursor = conn.cursor()
-        consulta = cursor.execute(f"SELECT NOME FROM USUARIOS WHERE USER_ID = {id}").fetchone()
-        return consulta[0]
+        try:
+            consulta = cursor.execute(f"SELECT NOME FROM USUARIOS WHERE USER_ID = {id}").fetchone()
+            return consulta[0]
+        except TypeError:
+            consulta = cursor.execute(f"SELECT CONVERSATION_NAME FROM CONVERSATIONS WHERE CONVERSATION_ID = {id}").fetchone()
+            return consulta[0]
 
 
 def insert_message(conversation_id, author_id, message):
