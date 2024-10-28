@@ -49,7 +49,41 @@
 					</div>
 
 					<div class="messages-chat" id="div-messages-chat">
+
 						<ul id="lista-mensagens"></ul>
+						
+						<div class="msg-panel-aviso">
+							<div class="panel-header-aviso">
+								<h2>Mensagem</h2>
+								<input
+									class="image-send-aviso"
+									type="image"
+									src="{{url_for('static', filename='images/send.png')}}"
+									alt="Botão com Imagem"
+									id="botao-enviar-aviso"
+								/>
+							</div>
+
+							<textarea
+									class="type-text-aviso"
+									type="text"
+									name="msg"
+									placeholder="Digite sua mensagem..."
+									id="msg-aviso"
+							></textarea>
+
+							
+						</div>
+
+						<div class="contact-panel-aviso">
+							<div class="panel-header-aviso">
+								<h2>Contatos</h2>
+							</div>
+							
+							<ul id="lista-contatos-aviso"></ul>
+
+						</div>
+
 					</div>
 				</div>
 
@@ -61,14 +95,27 @@
 				</ul>
 				</div> -->
 
-				<div class="input-msg">
+				<div class="response-msg" id="response-msg">
+					<div class="msg-of-response" id="msg-of-response">
+					</div>
 					<input
-						class="image-anexo"
+						class="image-x"
 						type="image"
-						src="{{url_for('static', filename='images/anexo.png')}}"
+						src="{{url_for('static', filename='images/x.png')}}"
 						alt="Botão com Imagem"
-						onclick="toggleAttachmentPanel()"
+						id="botao-x"
 					/>
+				</div>
+
+				<div class="input-msg">
+					<div class="custom-file-input">
+						<input
+						type="file"
+						alt="Botão com Imagem"
+						id="image-anexo"
+						/>
+					</div>
+					
 					<textarea
 						class="type-text"
 						type="text"
