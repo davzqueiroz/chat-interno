@@ -1,11 +1,14 @@
 import { server } from '../js/server.js';
+
+const ip_server = 'http://192.168.0.37:5000/'
 const messages_contacts = new Map();
 const lista_mensagens = document.getElementById('lista-mensagens');
 const botao_enviar = document.getElementById('botao-enviar');
+const botao_anexo = document.getElementById('image-anexo');
 const input_message = document.getElementById('input-message');
 const lista = document.getElementById('lista-contatos');
 
-const socket = io('http://192.168.0.37:5000/', {
+const socket = io(ip_server, {
 	extraHeaders: {
 		Authorization: localStorage.getItem('authToken'),
 	},
@@ -60,12 +63,13 @@ const audio_notify = new Audio('static/audios/new_message.mp3')
 audio_notify.volume = 0.2
 
 socket.on('message', (data) => {
+
 	// INSERE AS MENSAGENS NA MEMÓRIA LOCAL CASO JÁ TENHA CONSULTADO NO BANCO
 	if (!data['is_group']) {
 		if (messages_contacts.has(data['author_id'])) {
 			const history = messages_contacts.get(data['author_id']);
 			history.push({
-				id: 0,
+				id: data['message_id'],
 				conversation_id: 0,
 				sender_id: data['author_id'],
 				content: data['message'],
@@ -78,7 +82,7 @@ socket.on('message', (data) => {
 		if (messages_contacts.has(data['target_id'])) {
 			const history = messages_contacts.get(data['target_id']);
 			history.push({
-				id: 0,
+				id: data['message_id'],
 				conversation_id: 0,
 				sender_id: data['author_id'],
 				content: data['message'],
@@ -100,7 +104,6 @@ socket.on('message', (data) => {
 
 	// EMITE NOTIFICAÇÃO CASO A MENSAGEM SEJA PARA A CONVERSA QUE NAO ESTÁ ABERTA
 	if (data['author_id'] !== contato_atual['id'] && data['author_id'] !== user_data['id']) {
-		console.log(lista);
 		let listaContatos = Array.from(lista.getElementsByTagName('li'));
 		listaContatos.forEach((contato) => {
 
@@ -125,6 +128,24 @@ function insertReceivedHTML(data) {
 	const msg = document.createElement('li');
 	msg.classList.add('received');
 	
+	msg.addEventListener('dblclick', () => {
+		showResponseDiv(msg);
+	})
+
+	if (data['response_to'] != null){
+		const msg_response = document.createElement('div');
+		msg_response.classList.add('message-responsed');
+
+		msg_response.innerText = data['response_to']['content']
+		const timeofresponse = document.createElement('span');
+		timeofresponse.classList.add('message-time');
+		if (data['is_group']) {timeofresponse.innerText = data['response_to']['author_name'] + ' - ' + formatTime(data['response_to']['sent_at'])}
+		if (!data['is_group']) {timeofresponse.innerText = formatTime(data['response_to']['sent_at'])}
+		msg_response.appendChild(timeofresponse);
+		
+		msg.appendChild(msg_response);
+	}
+
 	const msgContent = document.createElement('div');
 	msgContent.innerText = data['message'];
 	
@@ -136,6 +157,7 @@ function insertReceivedHTML(data) {
 	}
 	else {msgTime.innerText = formatCurrentTime()}
 
+	msg.id = data['message_id']
 	msg.appendChild(msgContent);
 	msg.appendChild(msgTime);
 
@@ -191,6 +213,11 @@ option.innerText = 'Enviar aviso'
 option.id = 'enviar-aviso'
 lista_opcoes.appendChild(option)
 
+option = document.createElement('li');
+option.innerText = 'Fechar conversa'
+option.id = 'fechar-conversa'
+lista_opcoes.appendChild(option)
+
 if (user_data['nivel'] == 2) {
 	let option = document.createElement('li');
 	option.innerText = "Criar novo usuário"
@@ -203,35 +230,135 @@ option.innerText = 'Sair'
 option.id = 'sair'
 lista_opcoes.appendChild(option)
 
+// ======================= Função para exibir div de resposta nas mensagens ========================== //
+// ======================= Função para exibir div de resposta nas mensagens ========================== //
+// ======================= Função para exibir div de resposta nas mensagens ========================== //
+
+
+document.getElementById('botao-x').addEventListener('click', () => {
+	document.getElementById('response-msg').style.display = 'none';
+	msg_atual = ''
+})
+
+var msg_atual = ''
+
+function showResponseDiv(msg){
+	msg_atual = msg
+
+	document.getElementById('response-msg').style.display = 'flex';
+	if (msg.childElementCount == 2) {
+		document.getElementById('msg-of-response').innerText = msg.children[0].innerText;
+		const timeofresponse = document.createElement('span');
+		timeofresponse.classList.add('message-time');
+		timeofresponse.innerText = msg.children[1].innerText
+		document.getElementById('msg-of-response').appendChild(timeofresponse);
+	}
+
+	if (msg.childElementCount == 3) {
+		document.getElementById('msg-of-response').innerText = msg.children[1].innerText
+		const timeofresponse = document.createElement('span');
+		timeofresponse.classList.add('message-time');
+		timeofresponse.innerText = msg.children[2].innerText
+		document.getElementById('msg-of-response').appendChild(timeofresponse);
+	}
+	
+}
+
 // ============================== Funções para painel de configurações =============================== //
 // ============================== Funções para painel de configurações =============================== //
 // ============================== Funções para painel de configurações =============================== //
 
-document.getElementById('enviar-aviso').addEventListener('click', () => {
+document.getElementById('enviar-aviso').addEventListener('click', async () => {
 
-	let msgDiv = document.createElement('div');
-	msgDiv.classList.add('msg-aviso');
+	document.getElementById('nome-contato').innerText = user_data['nome'];
+	document.getElementById('foto-usuario').src = ip_server + '/static/images/usuarios/' + user_data['nome'] +'.png'
+
+	contato_atual = ''
+	lista_mensagens.innerText = ''
+	document.querySelector('.input-msg').style.visibility = 'hidden';
+	document.querySelector('.msg-panel-aviso').style.visibility = 'visible';
+	document.querySelector('.contact-panel-aviso').style.visibility = 'visible';
+	const contacts = await insertContactsAlert();
+
+	document.getElementById('botao-enviar-aviso').addEventListener('click', () => {
+		const msg = document.getElementById('msg-aviso').value;
+
+		if (msg.trim() !== '') {
+			sendAlert(msg, contatosToSend, contacts);
+		}
+		
+	})
+
 	
 
-	let panelHeaderDiv = document.createElement('div');
-	panelHeaderDiv.classList.add('panel-header')
-	panelHeaderDiv.id = "panel-header-msgaviso"
+});
 
-	let listaContatosDiv = document.createElement('div');
-	listaContatosDiv.classList.add('listacontatos-aviso');	
+const contatosToSend = [];
+async function insertContactsAlert() {
+	const contacts = [];
+	try {
+		const { data } = await server('/get_contacts');
 
-	document.querySelector('.msg-aviso').appendChild(panelHeaderDiv)
-	document.querySelector('.listacontatos-aviso').appendChild(panelHeaderDiv)
+		for (const contact of data) {
+			if (contact['id'] == user_data['id']) continue;
+			const contato = document.createElement('li');
+			contato.innerText = contact['nome'];
 
+			contato.addEventListener('click', function selectContactToSend() {
+				if (!contatosToSend.includes(contato.innerText)) {
+					contato.style.backgroundColor = "#0f173d";
+					contatosToSend.push(contato.innerText)
+				}
+				else if (contatosToSend.includes(contato.innerText)) {
+					contato.style.backgroundColor = "#2436928c"
+					contatosToSend.splice(contatosToSend.indexOf(contato.innerText), 1)
+				}
+			});
 
-	
-	document.getElementById('div-messages-chat').appendChild(msgDiv);
-	document.getElementById('div-messages-chat').appendChild(listaContatosDiv);
+			document.getElementById('lista-contatos-aviso').appendChild(contato);
+			contacts.push(contact)
+		}
+		return contacts;
+	} catch (error) {
+		console.log(error);
+	}
+}
+
+function sendAlert(msg, contatosToSend, contacts) {
+
+	contatosToSend.forEach(contato => {
+		contacts.forEach(contact => {
+			if (contact.nome == contato) {
+				console.log(contact.nome, contato)
+				socket.emit('send_message', {
+					target_id: contact['id'],
+					message: msg,
+					author_id: user_data['id'],
+					conversation_id: '',
+					is_group: false
+				});
+			}
+		});	
+	});
+
+};
+
+document.getElementById('fechar-conversa').addEventListener('click', () => {
+
+	document.getElementById('nome-contato').innerText = user_data['nome'];
+	document.getElementById('foto-usuario').src = ip_server + '/static/images/usuarios/' + user_data['nome'] +'.png'
+	contato_atual = ''
+	lista_mensagens.innerText = ''
+	document.querySelector('.input-msg').style.visibility = 'hidden';
+	document.querySelector('.msg-panel-aviso').style.visibility = 'hidden';
+	document.querySelector('.contact-panel-aviso').style.visibility = 'hidden';
+	msg_atual = ''
 
 });
 
 document.getElementById('sair').addEventListener('click', () => {
 	localStorage.removeItem('authToken');
+	msg_atual = ''
 	window.location.href = '/';
 });
 
@@ -247,29 +374,25 @@ document.getElementById('novo-usuario').addEventListener('click', () => {
 
 function insertMessageHTML(contato, is_group) {
 	const value_textbar = document.getElementById('input-message').value;
+	const client_id = Math.random().toString()
 
-	if (value_textbar.trim() !== '') {
-		const msg = document.createElement('li');
-        msg.classList.add('sended');
-        
-        const msgContent = document.createElement('div');
-        msgContent.innerText = value_textbar;
-        
-        const msgTime = document.createElement('span');
-        msgTime.classList.add('message-time');
-        msgTime.innerText = formatCurrentTime();
-
-        msg.appendChild(msgContent);
-        msg.appendChild(msgTime);
-
-        lista_mensagens.appendChild(msg);
-
-		const messageContainer = document.querySelector('.messages-chat');
-		messageContainer.scrollTop = messageContainer.scrollHeight;
-
+	if (value_textbar.trim() == '') {
+		return null
 	}
+	
+	const msg = document.createElement('li');
+	msg.classList.add('sended');
+	
+	const msgContent = document.createElement('div');
+	msgContent.innerText = value_textbar;
+	
+	const msgTime = document.createElement('span');
+	msgTime.classList.add('message-time');
+	msgTime.innerText = formatCurrentTime();
 
-	document.getElementById('input-message').value = '';
+	msg.addEventListener('dblclick', () => {
+		showResponseDiv(msg);
+	})
 
 	if (!messages_contacts.has(contato['id'])) messages_contacts.set(contato['id'], []);
 	const history = messages_contacts.get(contato['id']);
@@ -278,7 +401,9 @@ function insertMessageHTML(contato, is_group) {
 		conversation_id: 0,
 		sender_id: user_data['id'],
 		content: value_textbar,
-		sent_at: getFormattedDate()
+		sent_at: getFormattedDate(),
+		response_to: msg_atual['id'] || null,
+		client_id: client_id
 	});
 
 	if (value_textbar.trim() !== '') {
@@ -287,18 +412,96 @@ function insertMessageHTML(contato, is_group) {
 			message: value_textbar,
 			author_id: user_data['id'],
 			conversation_id: '',
-			is_group: is_group
+			is_group: is_group,
+			sent_at: getFormattedDate(),
+			response_to: msg_atual['id'] || null,
+			client_id: client_id
 		});
 	}
 
-	// messages_contacts.set(contato['id'], history)
+	if (document.getElementById('response-msg').style.display == 'flex'){
+
+		const msg_response = document.createElement('div');
+		msg_response.classList.add('message-responsed');
+
+		if (msg_atual.childElementCount == 2) {
+			msg_response.innerText = msg_atual.children[0].innerText;
+			const timeofresponse = document.createElement('span');
+			timeofresponse.classList.add('message-time');
+			timeofresponse.innerText = msg_atual.children[1].innerText
+			msg_response.appendChild(timeofresponse);
+		}
+	
+		if (msg_atual.childElementCount == 3) {
+			msg_response.innerText = msg_atual.children[1].innerText
+			const timeofresponse = document.createElement('span');
+			timeofresponse.classList.add('message-time');
+			timeofresponse.innerText = msg_atual.children[2].innerText
+			msg_response.appendChild(timeofresponse);
+		}
+
+		msg.appendChild(msg_response);
+		document.getElementById('response-msg').style.display = 'none'
+		msg_atual = ''
+
+	}
+
+	msg.id = client_id
+	msg.appendChild(msgContent);
+	msg.appendChild(msgTime);
+
+	lista_mensagens.appendChild(msg);
+
+	const messageContainer = document.querySelector('.messages-chat');
+	messageContainer.scrollTop = messageContainer.scrollHeight;
+
+	document.getElementById('input-message').value = '';
+
 }
 
 // ============================================ Foto dinâmica ======================================== //
 // ============================================ Foto dinâmica ======================================== //
 // ============================================ Foto dinâmica ======================================== //
 
-document.getElementById('foto-usuario').src = 'http://192.168.0.37:5000/static/images/usuarios/' + user_data['nome'] +'.png'
+document.getElementById('foto-usuario').src = ip_server + '/static/images/usuarios/' + user_data['nome'] +'.png'
+
+// ==================================== Função para enviar anexos ==================================== //
+// ==================================== Função para enviar anexos ==================================== //
+// ==================================== Função para enviar anexos ==================================== //
+
+async function sendAttachment(event) {
+	let formdata = new FormData();
+	formdata.append('file', event.target.files[0]);
+
+	try {
+		await server.post('/upload', formdata)
+
+		const msg = document.createElement('li');
+		msg.classList.add('sended');
+
+		const msg_response = document.createElement('div');
+		msg_response.classList.add('message-responsed');
+		
+		const msgContent = document.createElement('div');
+		msgContent.innerText = event.target.files[0]['name'];
+		
+		const msgTime = document.createElement('span');
+		msgTime.classList.add('message-time');
+		msgTime.innerText = formatCurrentTime();
+
+		msg_response.append(msgContent);
+		msg.append(msg_response);
+		msg.append(msgTime);
+
+		lista_mensagens.append(msg)
+
+		const messageContainer = document.querySelector('.messages-chat');
+		messageContainer.scrollTop = messageContainer.scrollHeight;
+		
+	} catch (error) {
+		console.log(error)
+	}
+};
 
 // ============================================ Grupos dinâmicos ===================================== //
 // ============================================ Grupos dinâmicos ===================================== //
@@ -315,8 +518,11 @@ async function get_groups() {
 			grupo.innerText = 'GRUPO - ' + group['nome'];
 
 			grupo.addEventListener('click', function editContactName() {
+				document.querySelector('.msg-panel-aviso').style.visibility = 'hidden';
+				document.querySelector('.contact-panel-aviso').style.visibility = 'hidden';
+
 				document.getElementById('nome-contato').innerText = group['nome'];
-				document.getElementById('foto-usuario').src = 'http://192.168.0.37:5000/static/images/usuarios/parcol.png'
+				document.getElementById('foto-usuario').src = ip_server + '/static/images/usuarios/parcol.png'
 				document.querySelector('.input-msg').style.visibility = 'visible';
 				showMessages(group, true, group['nome']);
 				grupo.style.backgroundColor = "#202b7a";
@@ -361,8 +567,11 @@ async function get_contacts() {
 			contato.prepend(statusSpan);
 
 			contato.addEventListener('click', function editContactName() {
+				document.querySelector('.msg-panel-aviso').style.visibility = 'hidden';
+				document.querySelector('.contact-panel-aviso').style.visibility = 'hidden';
+
 				document.getElementById('nome-contato').innerText = contact['nome'];
-				document.getElementById('foto-usuario').src = 'http://192.168.0.37:5000/static/images/usuarios/' + contact['nome'] +'.png'
+				document.getElementById('foto-usuario').src = ip_server + '/static/images/usuarios/' + contact['nome'] +'.png'
 				document.querySelector('.input-msg').style.visibility = 'visible';
 				contato.style.backgroundColor = "#202b7a";
 				showMessages(contact, false, '');
@@ -371,6 +580,10 @@ async function get_contacts() {
 					insertMessageHTML(contact, false);
 				};
 
+				botao_anexo.addEventListener('change', async (event) => {
+					sendAttachment(event);
+				});
+				
 				input_message.onkeydown = (event) => {
 					if (event.key == 'Enter' && !event.shiftKey) {
 						event.preventDefault();
@@ -431,8 +644,8 @@ async function get_messages(contact, is_group, group_name){
 // ========================================= RENDERIZAR AS MENSAGENS NO HTML ============================== //
 
 function render_messages(messages, is_group) {
-
 	messages.forEach((element) => {
+		console.log(element)
 		const msg = document.createElement('li');
         msg.classList.add(element['sender_id'] == user_data['id'] ? 'sended' : 'received');
         
@@ -445,6 +658,23 @@ function render_messages(messages, is_group) {
         else if (is_group && element['sender_id'] !== user_data['id'] ) {msgTime.innerText = element['author_name'] + ' - ' + formatTime(element['sent_at'])}
 		else if (!is_group) {msgTime.innerText = formatTime(element['sent_at'])}
 
+		msg.addEventListener('dblclick', () => showResponseDiv(msg))
+
+		if (element['response_to'] != 0){
+			const msg_response = document.createElement('div');
+			msg_response.classList.add('message-responsed');
+
+			msg_response.innerText = element['response_to']['content']
+			const timeofresponse = document.createElement('span');
+			timeofresponse.classList.add('message-time');
+			if (element['is_group']) {timeofresponse.innerText = element['response_to']['author_name'] + ' - ' + formatTime(element['response_to']['sent_at'])}
+			if (!element['is_group']) {timeofresponse.innerText = formatTime(element['response_to']['sent_at'])}
+			msg_response.appendChild(timeofresponse);
+			
+			msg.appendChild(msg_response);
+		}
+
+		msg.id = element['id']
         msg.appendChild(msgContent);
         msg.appendChild(msgTime);
 
@@ -508,3 +738,4 @@ function getFormattedDate() {
 //       panel.classList.remove("open"); // Fecha o painel
 //     }
 //   });
+

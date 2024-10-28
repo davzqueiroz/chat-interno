@@ -98,7 +98,7 @@ body * {
 }
 
 .contact-panel ul li:hover {
-	background-color: #3542a6; 
+	background-color: #3542a6 !important; 
 	box-shadow: 0 2px 8px rgba(19, 29, 80, 0.2); 
 }
 
@@ -111,6 +111,10 @@ body * {
 	width: 100%;
 	position: relative;
 	border-radius: 5%;
+	padding: 20px;
+	background-color: #0f173d; 
+	color: white;
+	border-radius: 2%;
 }
 
 .panel-header > h2 {
@@ -128,7 +132,7 @@ body * {
 }
 
 .panel-header > input:hover {
-	background-color: #3542a6; 
+	background-color: #3542a6 !important; 
 	box-shadow: 0 2px 8px rgba(19, 29, 80, 0.2); 
 	border-radius: 5px;
 }
@@ -193,7 +197,7 @@ body * {
 }
 
 .settings-panel ul li:hover {
-	background-color: #3542a6; 
+	background-color: #3542a6 !important; 
 	box-shadow: 0 2px 8px rgba(19, 29, 80, 0.2); 
 }
 
@@ -278,6 +282,7 @@ body * {
 }
 
 .messages-chat > ul {
+	width: 100%;
 	list-style-type: none;
 	padding: 0;
 	margin: 0;
@@ -286,11 +291,14 @@ body * {
 }
 
 .messages-chat li {
+	display: flex;
+	flex-direction: column;
 	padding: 10px 15px;
 	border-radius: 10px;
 	margin-bottom: 10px;
 	max-width: 80%;
 	word-break: break-word;
+	box-sizing: border-box;
 }
 
 .received {
@@ -312,46 +320,191 @@ body * {
     display: block;
     margin-top: 5px;
     text-align: right;
+	box-sizing: border-box;
 }
 
 .messages-chat::-webkit-scrollbar {
-	display: none; /* Para navegadores WebKit (Chrome, Safari) */
+	display: none; 
 	scroll-behavior: smooth;
 }
 
-.msg-aviso {
+.response-msg {
+	display: none;
+	justify-content: flex-start;
+	align-items: center;
+	width: 100%;
+	height: 10%;
+	background: #202b7a;
+	box-sizing: border-box;
+}
+
+.msg-of-response {
+	margin-left: 6%;
+	width: 88%;
+	height: 85%;
+	background: #514869;
+	border: 1px solid black;
+	border-radius: 10px;
+	padding: 1%;
+	box-sizing: border-box;
+	overflow-y: auto;
+	word-break: break-word;
+	scrollbar-width: none;
+	scroll-behavior: smooth;
+}
+
+.message-responsed {
 	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: auto;
+	background: #473f5c;
+	border: 2px solid black;
+	margin: 5px;
+	margin-bottom: 7%;
+	border-radius: 5px;
+	padding: 10px;
+	word-break: break-word;
+}
+
+.image-x {
+	margin-left: 2.8%;
+	margin-bottom: 1.1%;
+	width: 1.8%;
+}
+
+/* ============================================ CSS DO PAINEL DE AVISO ======================================= */
+/* ============================================ CSS DO PAINEL DE AVISO ======================================= */
+/* ============================================ CSS DO PAINEL DE AVISO ======================================= */
+
+.msg-panel-aviso {
+	display: flex;
+	flex-direction: column;
 	position: absolute;
 	width: 25vw;
-	height: 95%;
-	background: red;
+	height: 90%;
+	background: #2436928c; 
 	z-index: 5;
 	margin-top: 3%;
 	margin-left: 3%;
-	border-radius: 3%;
+	border: 2px solid #0f173d;
+	border-radius: 2%;
+	visibility: hidden;
+	box-sizing: border-box;
 }
 
-.listacontatos-aviso {
+.contact-panel-aviso {
 	display: flex;
+	flex-direction: column;
 	position: absolute;
 	width: 25vw;
-	height: 95%;
+	height: 90%;
 	z-index: 5;
 	left: 55%;
 	margin-top: 3%;
 	margin-right: 3%;
-	border-radius: 3%;
-	background-color: #243692; 
+	background-color: #2436928c; 
 	color: white;
 	box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+	border: 2px solid #0f173d;
+	border-radius: 2%;
+	visibility: hidden;
+	box-sizing: border-box;
 }
 
-.listacontatos-aviso .panel-header {
-	padding: 20px;
+.panel-header-aviso {
+	display: flex;
+	position: relative;
+	width: 100%;
+	height: 14%;
+	justify-content: center;
+	align-items: center;
+	padding-top: 1vh;
 	background-color: #0f173d; 
 	color: white;
-	border-radius: 2%;
+	border-radius: 2% 2% 0px 0px;
+	text-align: center;
 }
+
+.panel-header-aviso > h2 {
+	font-size: 1.4vw;
+	position: absolute; 
+	left: 50%;
+	top: 20%;
+	transform: translateX(-50%); 
+	margin: 0; 
+	align-items: center;
+	box-sizing: border-box;
+}
+
+.type-text-aviso {
+	width: 95%; 
+	height: 82%;
+	border-radius: 10px;
+	padding: 15px;
+	background: #514869;
+	color: #f0ffffde;
+	font-size: 12pt;
+	box-shadow: 0px 10px 40px #00000056;
+	outline: none;
+	box-sizing: border-box;
+	margin: 3%;
+	resize: none;
+}
+
+.type-text-aviso > input::placeholder {
+	color: #f0ffff94;
+}
+
+.contact-panel-aviso ul {
+	width: 95%;
+	list-style: none;
+	padding: 10px;
+	margin: 0;
+	max-height: calc(100% - 80px); 
+	overflow-y: auto; 
+	scrollbar-width: none;
+	scroll-behavior: smooth;
+}
+
+.contact-panel-aviso ul li {
+	width: 95%;
+	padding: 15px;
+	margin-bottom: 10px;
+	background-color: #2436928c;
+	border-radius: 8px;
+	font-size: 0.9vw;
+	color: white;
+	cursor: pointer;
+	transition: background-color 0.3s ease, box-shadow 0.3s ease;
+	box-sizing: border-box;
+}
+
+.contact-panel-aviso ul li:hover {
+	background-color: #3542a6 !important;
+	box-shadow: 0 2px 8px rgba(19, 29, 80, 0.2) !important;
+}
+
+.contact-panel-aviso ul li:active {
+	background-color: #4858c9; 
+}
+
+.image-send-aviso {
+	position: absolute;
+	transform: translateY(-10%);
+	width: 2vw;
+	right: 5%;
+	background-color: #243692;
+	border: 5px solid #243692;
+	transition: border-color 0.3s;
+	border-radius: 15%;
+}
+
+.image-send-aviso:hover {
+	background-color: #3542a6;
+	border-color: #3542a6;
+}
+
 
 /* ============================================== CSS DO INPUT-MSG ======================================= */
 /* ============================================== CSS DO INPUT-MSG ======================================= */
@@ -390,9 +543,33 @@ body * {
 	color: #f0ffff94;
 }
 
-.image-anexo {
-	width: 3.5%;
-	margin-right: none;
+.custom-file-input {
+    width: 3.5%;
+	height: 100%;
+    background: url('../images/anexo.png');
+    background-size: 100%;
+	background-repeat: no-repeat;
+	background-position: center;
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+  }
+
+  .custom-file-input input[type="file"] {
+    opacity: 0;
+    width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+  }
+
+.custom-file-input:hover {
+	cursor: pointer;
+}
+
+.custom-file-input input[type="file"]:hover {
+	cursor: pointer;
 }
 
 .image-send {
