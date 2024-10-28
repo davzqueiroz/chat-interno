@@ -1,15 +1,17 @@
 import bcrypt
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from backend.functions import *
 from backend.hashmap import HashMap
 import socketio
 import eventlet
 import socket
+import os
 
 local_ip = socket.gethostbyname(socket.gethostname())
 client_connections = HashMap()
+diretorio = "static/uploads/"
 
 # =================================================== SOCKET.IO ========================================================
 # =================================================== SOCKET.IO ========================================================
@@ -46,18 +48,22 @@ def send_message(sid, data):
 
     if data['is_group'] is False:
         conversation_id = consulta_conversation_id(author_id, target_id)
-        insert_message(conversation_id, author_id, message)
+        insert_message(conversation_id, author_id, message, data['response_to'], data['client_id'])
+        message_id = consulta_message_id(author_id, message, conversation_id, data['sent_at'])
+
         if client_connections.has(target_id):
-            data = {'target_id': target_id, 'message': message, 'author': sid, 'author_id': author_id,
+            data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid, 'author_id': author_id,
                     'author_name': consulta_nome(author_id), 'is_group': data['is_group'],
-                    'group_name': consulta_nome(target_id)}
+                    'group_name': consulta_nome(target_id), 'response_to': consulta_message_using_client_id(data['response_to'])}
             sio.emit("message", data)
 
     elif data['is_group'] is True:
-        insert_message(target_id, author_id, message)
-        data = {'target_id': target_id, 'message': message, 'author': sid, 'author_id': author_id,
+        insert_message(target_id, author_id, message, data['response_to'], data['client_id'])
+        message_id = consulta_message_id(author_id, message, target_id, data['sent_at'])
+
+        data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid, 'author_id': author_id,
                 'author_name': consulta_nome(author_id), 'is_group': data['is_group'],
-                'group_name': consulta_nome(target_id)}
+                'group_name': consulta_nome(target_id), 'response_to': consulta_message_using_client_id(data['response_to'])}
         sio.emit("message", data)
 
 
@@ -172,6 +178,26 @@ def get_contacts():
         return contacts
     else:
         return jsonify({'error': 'Token inválido'}), 401
+
+# ================================================ ROTA DE UPLOAD ======================================================
+# ================================================ ROTA DE UPLOAD ======================================================
+# ================================================ ROTA DE UPLOAD ======================================================
+
+
+@app.route("/upload", methods=['POST'])
+def upload():
+    data = request.files.get("file")
+    data.save(os.path.join(diretorio, data.filename))
+    return '', 201
+
+# ============================================== ROTA DE DOWNLOAD ======================================================
+# ============================================== ROTA DE DOWNLOAD ======================================================
+# ============================================== ROTA DE DOWNLOAD ======================================================
+
+
+@app.route("/download/<filename>", methods=['GET'])
+def download(filename):
+    return send_from_directory(diretorio, filename)
 
 
 if __name__ == '__main__':
