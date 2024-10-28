@@ -38,10 +38,12 @@ def consultar_mensagens(my_id, is_group, id_target=None, group_name=None):
         consulta_mensagens = cursor.execute(f"SELECT * FROM (SELECT * FROM MESSAGES WHERE CONVERSATION_ID = {conversation_target} ORDER BY SENT_AT DESC LIMIT 20) AS SUBQUERY ORDER BY SENT_AT ASC").fetchall()
         mensagens = []
         for mensagem in consulta_mensagens:
-            mensagens.append({'id': mensagem[0], 'conversation_id': mensagem[1], 'sender_id': mensagem[2], 'content': mensagem[3], 'sent_at': mensagem[4], 'type': mensagem[5], 'author_name': consulta_nome(mensagem[2])})
+            consulta_response = 0
+            if mensagem[6] is not None and mensagem[6] != 0:
+                consulta_response = cursor.execute(f"SELECT * FROM MESSAGES WHERE MESSAGE_ID = {mensagem[6]}").fetchone()
+                consulta_response = {'id': consulta_response[0], 'conversation_id': consulta_response[1], 'sender_id': consulta_response[2], 'content': consulta_response[3], 'sent_at': consulta_response[4], 'type': consulta_response[5], 'author_name': consulta_nome(consulta_response[2])}
+            mensagens.append({'id': mensagem[0], 'conversation_id': mensagem[1], 'sender_id': mensagem[2], 'content': mensagem[3], 'sent_at': mensagem[4], 'type': mensagem[5], 'author_name': consulta_nome(mensagem[2]), 'response_to': consulta_response, 'is_group': is_group})
         return mensagens
-
-        # print(cursor.execute(f"SELECT CONVERSATION_ID FROM CONVERSATIONS WHERE IS_GROUP = {is_group} AND CONVERSATION_ID IN ({retorno})").fetchall())
 
 
 def consulta_conversation_id(my_id, id_target):
@@ -71,10 +73,14 @@ def consulta_nome(id):
             return consulta[0]
 
 
-def insert_message(conversation_id, author_id, message):
+def insert_message(conversation_id, author_id, message, response_to, client_id):
     with connection() as conn:
         cursor = conn.cursor()
-        cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now','localtime'), 'TEXT')")
+        if response_to is not None:
+            response_to = cursor.execute(f"SELECT MESSAGE_ID FROM MESSAGES WHERE CLIENT_ID = '{response_to}' OR MESSAGE_ID = {response_to}").fetchone()[0]
+        elif response_to is None:
+            response_to = 'NULL'
+        cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE, RESPONSE_TO, CLIENT_ID) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now','localtime'), 'TEXT', {response_to}, '{client_id}')")
         conn.commit()  # Ao enviar mensagens salvar no banco de dados
 
 
@@ -90,3 +96,25 @@ def verify_token(token):
         return None
     except jwt.exceptions.InvalidTokenError:
         return None
+
+
+def consulta_message_id(author_id, message, conversation_id, sent_at):
+    with connection() as conn:
+        cursor = conn.cursor()
+        consulta = cursor.execute(f"SELECT MESSAGE_ID FROM MESSAGES WHERE SENDER_ID = {author_id} AND CONTENT = '{message}' AND CONVERSATION_ID = {conversation_id} AND SENT_AT = '{sent_at}'").fetchall()
+        message_id = consulta[len(consulta) - 1][0]
+        return message_id
+
+
+def consulta_message_using_client_id(client_id):
+    with connection() as conn:
+        cursor = conn.cursor()
+        if client_id is not None:
+            consulta_response = cursor.execute(f"SELECT * FROM MESSAGES WHERE MESSAGE_ID = {client_id} OR CLIENT_ID = '{client_id}'").fetchone()
+            consulta_response = {'id': consulta_response[0], 'conversation_id': consulta_response[1],
+                                 'sender_id': consulta_response[2], 'content': consulta_response[3],
+                                 'sent_at': consulta_response[4], 'type': consulta_response[5],
+                                 'author_name': consulta_nome(consulta_response[2])}
+            return consulta_response
+        else:
+            return None
