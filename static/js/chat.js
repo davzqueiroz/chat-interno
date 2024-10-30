@@ -128,7 +128,8 @@ function insertReceivedHTML(data) {
 	const msg = document.createElement('li');
 	msg.classList.add('received');
 	
-	msg.addEventListener('dblclick', () => {
+	msg.addEventListener('dblclick', (event) => {
+		event.preventDefault()
 		showResponseDiv(msg);
 	})
 
@@ -146,21 +147,79 @@ function insertReceivedHTML(data) {
 		msg.appendChild(msg_response);
 	}
 
-	const msgContent = document.createElement('div');
-	msgContent.innerText = data['message'];
+	// Se for uma mensagem de texto, cria a mensagem dentro do padrão de texto
+	if (data['type'] == "TEXT") {
+		const msgContent = document.createElement('div');
+		msgContent.innerText = data['message'];
+		
+		const msgTime = document.createElement('span');
+		msgTime.classList.add('message-time');
 	
-	const msgTime = document.createElement('span');
-	msgTime.classList.add('message-time');
+		if (data['is_group']){
+			msgTime.innerText = data['author_name'] + ' - ' + formatCurrentTime();
+		}
+		else {msgTime.innerText = formatCurrentTime()}
 
-	if (data['is_group']){
-		msgTime.innerText = data['author_name'] + ' - ' + formatCurrentTime();
+		msg.appendChild(msgContent);
+		msg.appendChild(msgTime);
 	}
-	else {msgTime.innerText = formatCurrentTime()}
+
+	// Se a mensagem for um arquivo, cria a mensagem dentro do padrão de arquivo
+	else if (data['type'] == "BYTES"){
+		const msg_attachment = document.createElement('div');
+		msg_attachment.classList.add('message-attachment');
+		
+		const icon_type_archive = document.createElement('div');
+		icon_type_archive.classList.add('icon-type-archive');
+		if (data['type_archive'].includes("spreadsheet")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/xlsx.png')`;}
+		else if (data['type_archive'].includes("pdf")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/pdf.png')`;}
+		else if (data['type_archive'].includes("text")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/txt.png')`;}
+		else if (data['type_archive'].includes("word")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/word.png')`;}
+		else if (data['type_archive'].includes("zip")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/winrar.png')`;}
+		else if (data['type_archive'].includes("image")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/image.png')`;}
+
+		const download_button = document.createElement('input');
+		download_button.type = 'image';
+		download_button.src = ip_server + '/static/images/download.png';
+		download_button.classList.add('download-attachment');
+		download_button.addEventListener('click', async () => {
+
+			try {
+				const response = await server(`download/${data['message']}`, { responseType: 'blob' })
+				const url = window.URL.createObjectURL(response['data']);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = data['message'];
+				document.body.appendChild(a);
+				a.click();
+				a.remove();
+				window.URL.revokeObjectURL(url);
+			} catch (error) {
+				console.log(error)
+			}
+				
+			});
+
+		const msgContent = document.createElement('div');
+		msgContent.innerText = data['message'];
+		
+		const msgTime = document.createElement('span');
+		msgTime.classList.add('message-time');
+		
+		if (data['is_group']){
+			msgTime.innerText = data['author_name'] + ' - ' + formatCurrentTime();
+		}
+		else {msgTime.innerText = formatCurrentTime()}
+
+		msg_attachment.append(icon_type_archive);
+		msg_attachment.append(msgContent);
+		msg_attachment.append(download_button);
+	
+		msg.append(msg_attachment);
+		msg.append(msgTime);
+	}
 
 	msg.id = data['message_id']
-	msg.appendChild(msgContent);
-	msg.appendChild(msgTime);
-
 	lista_mensagens.appendChild(msg);
 
 	const messageContainer = document.querySelector('.messages-chat');
@@ -390,7 +449,8 @@ function insertMessageHTML(contato, is_group) {
 	msgTime.classList.add('message-time');
 	msgTime.innerText = formatCurrentTime();
 
-	msg.addEventListener('dblclick', () => {
+	msg.addEventListener('dblclick', (event) => {
+		event.preventDefault()
 		showResponseDiv(msg);
 	})
 
@@ -469,19 +529,62 @@ document.getElementById('foto-usuario').src = ip_server + '/static/images/usuari
 // ==================================== Função para enviar anexos ==================================== //
 // ==================================== Função para enviar anexos ==================================== //
 
-async function sendAttachment(event) {
+async function sendAttachment(event, is_group) {
 	let formdata = new FormData();
 	formdata.append('file', event.target.files[0]);
+	const client_id = Math.random().toString()
 
 	try {
 		await server.post('/upload', formdata)
 
+		socket.emit('send_archive', {
+			target_id: contato_atual['id'],
+			message: event.target.files[0]['name'],
+			author_id: user_data['id'],
+			is_group: is_group,
+			sent_at: getFormattedDate(),
+			response_to: msg_atual['id'] || null,
+			client_id: client_id,
+			type_archive: event.target.files[0]['type']
+		});
+
 		const msg = document.createElement('li');
 		msg.classList.add('sended');
 
-		const msg_response = document.createElement('div');
-		msg_response.classList.add('message-responsed');
+		const msg_attachment = document.createElement('div');
+		msg_attachment.classList.add('message-attachment');
 		
+		const icon_type_archive = document.createElement('div');
+		icon_type_archive.classList.add('icon-type-archive');
+		if (event.target.files[0]['type'].includes("spreadsheet")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/xlsx.png')`;}
+		else if (event.target.files[0]['type'].includes("pdf")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/pdf.png')`;}
+		else if (event.target.files[0]['type'].includes("text")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/txt.png')`;}
+		else if (event.target.files[0]['type'].includes("word")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/word.png')`;}
+		else if (event.target.files[0]['type'].includes("zip")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/winrar.png')`;}
+		else if (event.target.files[0]['type'].includes("image")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/image.png')`;}
+
+		const download_button = document.createElement('input');
+		download_button.type = 'image';
+		download_button.src = ip_server + '/static/images/download.png';
+		download_button.classList.add('download-attachment');
+		download_button.addEventListener('click', async () => {
+
+			try {
+				const response = await server(`download/${event.target.files[0]['name']}`, { responseType: 'blob' })
+				const url = window.URL.createObjectURL(response['data']);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = event.target.files[0]['name'];
+				document.body.appendChild(a);
+				a.click();
+				a.remove();
+				window.URL.revokeObjectURL(url);
+			} catch (error) {
+				console.log(error)
+			}
+				
+			});
+
 		const msgContent = document.createElement('div');
 		msgContent.innerText = event.target.files[0]['name'];
 		
@@ -489,15 +592,17 @@ async function sendAttachment(event) {
 		msgTime.classList.add('message-time');
 		msgTime.innerText = formatCurrentTime();
 
-		msg_response.append(msgContent);
-		msg.append(msg_response);
+		msg_attachment.append(icon_type_archive);
+		msg_attachment.append(msgContent);
+		msg_attachment.append(download_button);
+		msg.append(msg_attachment);
 		msg.append(msgTime);
 
 		lista_mensagens.append(msg)
 
 		const messageContainer = document.querySelector('.messages-chat');
 		messageContainer.scrollTop = messageContainer.scrollHeight;
-		
+
 	} catch (error) {
 		console.log(error)
 	}
@@ -530,6 +635,10 @@ async function get_groups() {
 				botao_enviar.onclick = function () {
 					insertMessageHTML(group, true);
 				};
+
+				botao_anexo.addEventListener('change', async (event) => {
+					sendAttachment(event, true);
+				});
 
 				input_message.onkeydown = (event) => {
 					if (event.key == 'Enter' && !event.shiftKey) {
@@ -581,7 +690,7 @@ async function get_contacts() {
 				};
 
 				botao_anexo.addEventListener('change', async (event) => {
-					sendAttachment(event);
+					sendAttachment(event, false);
 				});
 				
 				input_message.onkeydown = (event) => {
@@ -645,21 +754,11 @@ async function get_messages(contact, is_group, group_name){
 
 function render_messages(messages, is_group) {
 	messages.forEach((element) => {
-		console.log(element)
+		// console.log(element)
 		const msg = document.createElement('li');
         msg.classList.add(element['sender_id'] == user_data['id'] ? 'sended' : 'received');
-        
-        const msgContent = document.createElement('div');
-        msgContent.innerText = element['content'];
-        
-        const msgTime = document.createElement('span');
-        msgTime.classList.add('message-time');
-		if (is_group && element['sender_id'] == user_data['id']) {msgTime.innerText = formatTime(element['sent_at'])}
-        else if (is_group && element['sender_id'] !== user_data['id'] ) {msgTime.innerText = element['author_name'] + ' - ' + formatTime(element['sent_at'])}
-		else if (!is_group) {msgTime.innerText = formatTime(element['sent_at'])}
-
-		msg.addEventListener('dblclick', () => showResponseDiv(msg))
-
+		
+		// Adiciona a DIV de resposta caso a mensagem seja resposta a alguma outra
 		if (element['response_to'] != 0){
 			const msg_response = document.createElement('div');
 			msg_response.classList.add('message-responsed');
@@ -674,11 +773,81 @@ function render_messages(messages, is_group) {
 			msg.appendChild(msg_response);
 		}
 
-		msg.id = element['id']
-        msg.appendChild(msgContent);
-        msg.appendChild(msgTime);
+		// Se for uma mensagem de texto, cria a mensagem dentro do padrão de texto
+		if (element['type'] == "TEXT") {
+			const msgContent = document.createElement('div');
+			msgContent.innerText = element['content'];
+			
+			const msgTime = document.createElement('span');
+			msgTime.classList.add('message-time');
+			if (is_group && element['sender_id'] == user_data['id']) {msgTime.innerText = formatTime(element['sent_at'])}
+			else if (is_group && element['sender_id'] !== user_data['id'] ) {msgTime.innerText = element['author_name'] + ' - ' + formatTime(element['sent_at'])}
+			else if (!is_group) {msgTime.innerText = formatTime(element['sent_at'])}
 
+			msg.appendChild(msgContent);
+        	msg.appendChild(msgTime);
+		}
+
+		// Se a mensagem for um arquivo, cria a mensagem dentro do padrão de arquivo
+		else if (element['type'] == "BYTES"){
+			const msg_attachment = document.createElement('div');
+			msg_attachment.classList.add('message-attachment');
+			
+			const icon_type_archive = document.createElement('div');
+			icon_type_archive.classList.add('icon-type-archive');
+			if (element['type_archive'].includes("spreadsheet")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/xlsx.png')`;}
+			else if (element['type_archive'].includes("pdf")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/pdf.png')`;}
+			else if (element['type_archive'].includes("text")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/txt.png')`;}
+			else if (element['type_archive'].includes("word")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/word.png')`;}
+			else if (element['type_archive'].includes("zip")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/winrar.png')`;}
+			else if (element['type_archive'].includes("image")) {icon_type_archive.style.backgroundImage = `url('${ip_server}/static/images/image.png')`;}
+
+			const download_button = document.createElement('input');
+			download_button.type = 'image';
+			download_button.src = ip_server + '/static/images/download.png';
+			download_button.classList.add('download-attachment');
+			download_button.addEventListener('click', async () => {
+
+			try {
+				const response = await server(`download/${element['content']}`, { responseType: 'blob' })
+				const url = window.URL.createObjectURL(response['data']);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = element['content'];
+				document.body.appendChild(a);
+				a.click();
+				a.remove();
+				window.URL.revokeObjectURL(url);
+			} catch (error) {
+				console.log(error)
+			}
+				
+			});
+
+			const msgContent = document.createElement('div');
+			msgContent.innerText = element['content'];
+			
+			const msgTime = document.createElement('span');
+			msgTime.classList.add('message-time');
+			if (is_group && element['sender_id'] == user_data['id']) {msgTime.innerText = formatTime(element['sent_at'])}
+			else if (is_group && element['sender_id'] !== user_data['id'] ) {msgTime.innerText = element['author_name'] + ' - ' + formatTime(element['sent_at'])}
+			else if (!is_group) {msgTime.innerText = formatTime(element['sent_at'])}
+
+			msg_attachment.append(icon_type_archive);
+			msg_attachment.append(msgContent);
+			msg_attachment.append(download_button);
+		
+			msg.append(msg_attachment);
+			msg.append(msgTime);
+		}
+
+		msg.addEventListener('dblclick', (event) => {
+			event.preventDefault()
+			showResponseDiv(msg);
+		})
+		msg.id = element['id']
         lista_mensagens.appendChild(msg);
+
 	});
 	const messageContainer = document.querySelector('.messages-chat');
 	messageContainer.scrollTop = messageContainer.scrollHeight;
