@@ -40,6 +40,40 @@ def disconnect(sid):
     sio.emit('receive_client_connections', client_connections.get_connections_name())
 
 
+@sio.on('send_archive')
+def send_archive(sid, data):
+    target_id = data['target_id']
+    message = data['message']
+    author_id = data['author_id']
+    type_archive = data['type_archive']
+
+    if data['is_group'] is False:
+        conversation_id = consulta_conversation_id(author_id, target_id)
+        insert_message(conversation_id, author_id, message, data['response_to'], data['client_id'], "BYTES", type_archive)
+        message_id = consulta_message_id(author_id, message, conversation_id, data['sent_at'])
+
+        if client_connections.has(target_id):
+            data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid,
+                    'author_id': author_id,
+                    'author_name': consulta_nome(author_id), 'is_group': data['is_group'],
+                    'group_name': consulta_nome(target_id),
+                    'response_to': consulta_message_using_client_id(data['response_to']), 'type': "BYTES", 'type_archive': type_archive}
+
+            sio.emit("message", data)
+
+    elif data['is_group'] is True:
+        insert_message(target_id, author_id, message, data['response_to'], data['client_id'], "BYTES", type_archive)
+        message_id = consulta_message_id(author_id, message, target_id, data['sent_at'])
+
+        data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid,
+                'author_id': author_id,
+                'author_name': consulta_nome(author_id), 'is_group': data['is_group'],
+                'group_name': consulta_nome(target_id),
+                'response_to': consulta_message_using_client_id(data['response_to']), 'type': "BYTES", 'type_archive': type_archive}
+
+        sio.emit("message", data)
+
+
 @sio.on('send_message')
 def send_message(sid, data):
     target_id = data['target_id']
@@ -48,22 +82,28 @@ def send_message(sid, data):
 
     if data['is_group'] is False:
         conversation_id = consulta_conversation_id(author_id, target_id)
-        insert_message(conversation_id, author_id, message, data['response_to'], data['client_id'])
+        insert_message(conversation_id, author_id, message, data['response_to'], data['client_id'], "TEXT", None)
         message_id = consulta_message_id(author_id, message, conversation_id, data['sent_at'])
 
         if client_connections.has(target_id):
-            data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid, 'author_id': author_id,
+            data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid,
+                    'author_id': author_id,
                     'author_name': consulta_nome(author_id), 'is_group': data['is_group'],
-                    'group_name': consulta_nome(target_id), 'response_to': consulta_message_using_client_id(data['response_to'])}
+                    'group_name': consulta_nome(target_id),
+                    'response_to': consulta_message_using_client_id(data['response_to']), 'type': "TEXT"}
+
             sio.emit("message", data)
 
     elif data['is_group'] is True:
-        insert_message(target_id, author_id, message, data['response_to'], data['client_id'])
+        insert_message(target_id, author_id, message, data['response_to'], data['client_id'], "TEXT", None)
         message_id = consulta_message_id(author_id, message, target_id, data['sent_at'])
 
-        data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid, 'author_id': author_id,
+        data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid,
+                'author_id': author_id,
                 'author_name': consulta_nome(author_id), 'is_group': data['is_group'],
-                'group_name': consulta_nome(target_id), 'response_to': consulta_message_using_client_id(data['response_to'])}
+                'group_name': consulta_nome(target_id),
+                'response_to': consulta_message_using_client_id(data['response_to']), 'type': "TEXT"}
+
         sio.emit("message", data)
 
 
@@ -106,8 +146,10 @@ def login():
         else:
             if bcrypt.checkpw(password.encode(), consulta_usuario[2]):
                 expiration = datetime.now() + timedelta(hours=9)
-                token = jwt.encode(payload={'id': consulta_usuario[0], 'nome': consulta_usuario[3], 'nivel': consulta_usuario[4], 'exp': expiration},
-                                   key='webchat', algorithm='HS256')
+                token = jwt.encode(
+                    payload={'id': consulta_usuario[0], 'nome': consulta_usuario[3], 'nivel': consulta_usuario[4],
+                             'exp': expiration},
+                    key='webchat', algorithm='HS256')
                 return jsonify({'token': token}), 200
             else:
                 return jsonify({'error': 'Usuário e/ou senha incorreta'}), 401
@@ -179,6 +221,7 @@ def get_contacts():
     else:
         return jsonify({'error': 'Token inválido'}), 401
 
+
 # ================================================ ROTA DE UPLOAD ======================================================
 # ================================================ ROTA DE UPLOAD ======================================================
 # ================================================ ROTA DE UPLOAD ======================================================
@@ -187,8 +230,12 @@ def get_contacts():
 @app.route("/upload", methods=['POST'])
 def upload():
     data = request.files.get("file")
-    data.save(os.path.join(diretorio, data.filename))
-    return '', 201
+    if data is not None:
+        data.save(os.path.join(diretorio, data.filename))
+        return '', 201
+    else:
+        return '', 404
+
 
 # ============================================== ROTA DE DOWNLOAD ======================================================
 # ============================================== ROTA DE DOWNLOAD ======================================================
