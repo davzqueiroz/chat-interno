@@ -42,7 +42,7 @@ def consultar_mensagens(my_id, is_group, id_target=None, group_name=None):
             if mensagem[6] is not None and mensagem[6] != 0:
                 consulta_response = cursor.execute(f"SELECT * FROM MESSAGES WHERE MESSAGE_ID = {mensagem[6]}").fetchone()
                 consulta_response = {'id': consulta_response[0], 'conversation_id': consulta_response[1], 'sender_id': consulta_response[2], 'content': consulta_response[3], 'sent_at': consulta_response[4], 'type': consulta_response[5], 'author_name': consulta_nome(consulta_response[2])}
-            mensagens.append({'id': mensagem[0], 'conversation_id': mensagem[1], 'sender_id': mensagem[2], 'content': mensagem[3], 'sent_at': mensagem[4], 'type': mensagem[5], 'author_name': consulta_nome(mensagem[2]), 'response_to': consulta_response, 'is_group': is_group})
+            mensagens.append({'id': mensagem[0], 'conversation_id': mensagem[1], 'sender_id': mensagem[2], 'content': mensagem[3], 'sent_at': mensagem[4], 'type': mensagem[5], 'author_name': consulta_nome(mensagem[2]), 'response_to': consulta_response, 'is_group': is_group, 'type_archive': mensagem[8]})
         return mensagens
 
 
@@ -73,14 +73,17 @@ def consulta_nome(id):
             return consulta[0]
 
 
-def insert_message(conversation_id, author_id, message, response_to, client_id):
+def insert_message(conversation_id, author_id, message, response_to, client_id, message_type, type_archive):
+    if type_archive is None:
+        type_archive = 'NULL'
+
     with connection() as conn:
         cursor = conn.cursor()
         if response_to is not None:
             response_to = cursor.execute(f"SELECT MESSAGE_ID FROM MESSAGES WHERE CLIENT_ID = '{response_to}' OR MESSAGE_ID = {response_to}").fetchone()[0]
         elif response_to is None:
             response_to = 'NULL'
-        cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE, RESPONSE_TO, CLIENT_ID) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now','localtime'), 'TEXT', {response_to}, '{client_id}')")
+        cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE, RESPONSE_TO, CLIENT_ID, TYPE_ARCHIVE) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now','localtime'), '{message_type}', {response_to}, '{client_id}', '{type_archive}')")
         conn.commit()  # Ao enviar mensagens salvar no banco de dados
 
 
