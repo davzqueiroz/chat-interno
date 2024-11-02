@@ -73,7 +73,9 @@ socket.on('message', (data) => {
 				conversation_id: 0,
 				sender_id: data['author_id'],
 				content: data['message'],
-				sent_at: getFormattedDate()
+				sent_at: getFormattedDate(),
+				type: data['type'],
+				type_archive: data['type_archive']
 			});
 		}
 	}
@@ -87,7 +89,9 @@ socket.on('message', (data) => {
 				sender_id: data['author_id'],
 				content: data['message'],
 				sent_at: getFormattedDate(),
-				author_name: data['author_name']
+				author_name: data['author_name'],
+				type: data['type'],
+				type_archive: data['type_archive']
 			});
 		}
 	}
@@ -329,12 +333,14 @@ function showResponseDiv(msg){
 
 document.getElementById('enviar-aviso').addEventListener('click', async () => {
 
+	closeConversation()
+
 	document.getElementById('nome-contato').innerText = user_data['nome'];
 	document.getElementById('foto-usuario').src = ip_server + '/static/images/usuarios/' + user_data['nome'] +'.png'
 
 	contato_atual = ''
 	lista_mensagens.innerText = ''
-	document.querySelector('.input-msg').style.visibility = 'hidden';
+
 	document.querySelector('.msg-panel-aviso').style.visibility = 'visible';
 	document.querySelector('.contact-panel-aviso').style.visibility = 'visible';
 	const contacts = await insertContactsAlert();
@@ -402,8 +408,7 @@ function sendAlert(msg, contatosToSend, contacts) {
 
 };
 
-document.getElementById('fechar-conversa').addEventListener('click', () => {
-
+function closeConversation() {
 	document.getElementById('nome-contato').innerText = user_data['nome'];
 	document.getElementById('foto-usuario').src = ip_server + '/static/images/usuarios/' + user_data['nome'] +'.png'
 	contato_atual = ''
@@ -411,19 +416,41 @@ document.getElementById('fechar-conversa').addEventListener('click', () => {
 	document.querySelector('.input-msg').style.visibility = 'hidden';
 	document.querySelector('.msg-panel-aviso').style.visibility = 'hidden';
 	document.querySelector('.contact-panel-aviso').style.visibility = 'hidden';
+	document.getElementById('div-criar-contato').style.display = 'none';
 	msg_atual = ''
+}
 
+document.getElementById('fechar-conversa').addEventListener('click', () => {
+	closeConversation()
 });
 
 document.getElementById('sair').addEventListener('click', () => {
 	localStorage.removeItem('authToken');
-	msg_atual = ''
 	window.location.href = '/';
 });
 
 if (user_data['nivel'] == 2) {
 document.getElementById('novo-usuario').addEventListener('click', () => {
-	// Adicionar lógica para exibir painel de criação de usuário
+	closeConversation()
+	document.getElementById('div-criar-contato').style.display = 'flex';
+
+	document.getElementById('button-criar-contato').addEventListener('click', async () => {
+		const email = document.getElementById('type-text-criar-contato').value
+		const senha = document.getElementById('senha-criar-contato').value
+		const nome = document.getElementById('nome-criar-contato').value
+
+		try {
+			const response = await server.post('/register', {email: email, senha: senha, nome: nome})
+			document.getElementById('type-text-criar-contato').value = ''
+			document.getElementById('senha-criar-contato').value = ''
+			document.getElementById('nome-criar-contato').value = ''
+		} catch (error) {
+			window.alert(error);
+		}
+		
+		
+	});
+
 });
 }
 
@@ -463,7 +490,8 @@ function insertMessageHTML(contato, is_group) {
 		content: value_textbar,
 		sent_at: getFormattedDate(),
 		response_to: msg_atual['id'] || null,
-		client_id: client_id
+		client_id: client_id,
+		type: "TEXT"
 	});
 
 	if (value_textbar.trim() !== '') {
@@ -529,7 +557,7 @@ document.getElementById('foto-usuario').src = ip_server + '/static/images/usuari
 // ==================================== Função para enviar anexos ==================================== //
 // ==================================== Função para enviar anexos ==================================== //
 
-async function sendAttachment(event, is_group) {
+async function sendAttachment(event, is_group, contato) {
 	let formdata = new FormData();
 	formdata.append('file', event.target.files[0]);
 	const client_id = Math.random().toString()
@@ -545,6 +573,20 @@ async function sendAttachment(event, is_group) {
 			sent_at: getFormattedDate(),
 			response_to: msg_atual['id'] || null,
 			client_id: client_id,
+			type_archive: event.target.files[0]['type']
+		});
+
+		if (!messages_contacts.has(contato['id'])) messages_contacts.set(contato['id'], []);
+		const history = messages_contacts.get(contato['id']);
+		history.push({
+			id: 0,
+			conversation_id: 0,
+			sender_id: user_data['id'],
+			content: event.target.files[0]['name'],
+			sent_at: getFormattedDate(),
+			response_to: msg_atual['id'] || null,
+			client_id: client_id,
+			type: "BYTES",
 			type_archive: event.target.files[0]['type']
 		});
 
@@ -595,9 +637,38 @@ async function sendAttachment(event, is_group) {
 		msg_attachment.append(icon_type_archive);
 		msg_attachment.append(msgContent);
 		msg_attachment.append(download_button);
+
+		if (document.getElementById('response-msg').style.display == 'flex'){
+
+			const msg_response = document.createElement('div');
+			msg_response.classList.add('message-responsed');
+	
+			if (msg_atual.childElementCount == 2) {
+				msg_response.innerText = msg_atual.children[0].innerText;
+				const timeofresponse = document.createElement('span');
+				timeofresponse.classList.add('message-time');
+				timeofresponse.innerText = msg_atual.children[1].innerText
+				msg_response.appendChild(timeofresponse);
+			}
+		
+			if (msg_atual.childElementCount == 3) {
+				msg_response.innerText = msg_atual.children[1].innerText
+				const timeofresponse = document.createElement('span');
+				timeofresponse.classList.add('message-time');
+				timeofresponse.innerText = msg_atual.children[2].innerText
+				msg_response.appendChild(timeofresponse);
+			}
+	
+			msg.appendChild(msg_response);
+			document.getElementById('response-msg').style.display = 'none'
+			msg_atual = ''
+	
+		}
+	
+
 		msg.append(msg_attachment);
 		msg.append(msgTime);
-
+		
 		lista_mensagens.append(msg)
 
 		const messageContainer = document.querySelector('.messages-chat');
@@ -623,8 +694,7 @@ async function get_groups() {
 			grupo.innerText = 'GRUPO - ' + group['nome'];
 
 			grupo.addEventListener('click', function editContactName() {
-				document.querySelector('.msg-panel-aviso').style.visibility = 'hidden';
-				document.querySelector('.contact-panel-aviso').style.visibility = 'hidden';
+				closeConversation()
 
 				document.getElementById('nome-contato').innerText = group['nome'];
 				document.getElementById('foto-usuario').src = ip_server + '/static/images/usuarios/parcol.png'
@@ -637,7 +707,7 @@ async function get_groups() {
 				};
 
 				botao_anexo.addEventListener('change', async (event) => {
-					sendAttachment(event, true);
+					sendAttachment(event, true, group);
 				});
 
 				input_message.onkeydown = (event) => {
@@ -676,8 +746,7 @@ async function get_contacts() {
 			contato.prepend(statusSpan);
 
 			contato.addEventListener('click', function editContactName() {
-				document.querySelector('.msg-panel-aviso').style.visibility = 'hidden';
-				document.querySelector('.contact-panel-aviso').style.visibility = 'hidden';
+				closeConversation()
 
 				document.getElementById('nome-contato').innerText = contact['nome'];
 				document.getElementById('foto-usuario').src = ip_server + '/static/images/usuarios/' + contact['nome'] +'.png'
@@ -690,7 +759,7 @@ async function get_contacts() {
 				};
 
 				botao_anexo.addEventListener('change', async (event) => {
-					sendAttachment(event, false);
+					sendAttachment(event, false, contact);
 				});
 				
 				input_message.onkeydown = (event) => {
@@ -754,12 +823,12 @@ async function get_messages(contact, is_group, group_name){
 
 function render_messages(messages, is_group) {
 	messages.forEach((element) => {
-		// console.log(element)
+		console.log(element)
 		const msg = document.createElement('li');
         msg.classList.add(element['sender_id'] == user_data['id'] ? 'sended' : 'received');
 		
 		// Adiciona a DIV de resposta caso a mensagem seja resposta a alguma outra
-		if (element['response_to'] != 0){
+		if (element['response_to'] != null){
 			const msg_response = document.createElement('div');
 			msg_response.classList.add('message-responsed');
 
@@ -887,24 +956,4 @@ function getFormattedDate() {
 
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
-
-// ================================================ PAINEL DE ANEXO ========================================= //
-// ================================================ PAINEL DE ANEXO ========================================= //
-// ================================================ PAINEL DE ANEXO ========================================= //
-
-// function toggleAttachmentPanel() {
-//     const panel = document.getElementById('attachmentPanel');
-//     panel.classList.toggle('open');
-// }
-
-// // Função para fechar o painel ao clicar fora
-// document.addEventListener("click", function(event) {
-//     const panel = document.getElementById("attachmentPanel");
-//     const button = document.querySelector("image-anexo");
-
-//     // Verifica se o clique foi fora do painel e fora do botão de anexo
-//     if (!panel.contains(event.target) && !button.contains(event.target)) {
-//       panel.classList.remove("open"); // Fecha o painel
-//     }
-//   });
 
