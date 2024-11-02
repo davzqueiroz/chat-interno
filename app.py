@@ -107,9 +107,9 @@ def send_message(sid, data):
         sio.emit("message", data)
 
 
-# ===================================================== FLASK ==========================================================
-# ===================================================== FLASK ==========================================================
-# ===================================================== FLASK ==========================================================
+# ================================================ FLASK - PAGINAS =====================================================
+# ================================================ FLASK - PAGINAS =====================================================
+# ================================================ FLASK - PAGINAS =====================================================
 
 app = Flask(__name__)
 app.config['SECRET_KE'] = 'secret!'
@@ -153,6 +153,21 @@ def login():
                 return jsonify({'token': token}), 200
             else:
                 return jsonify({'error': 'Usuário e/ou senha incorreta'}), 401
+
+
+# ========================================== ROTA DE CRIAÇÃO DE USUÁRIOS ===============================================
+# ========================================== ROTA DE CRIAÇÃO DE USUÁRIOS ===============================================
+# ========================================== ROTA DE CRIAÇÃO DE USUÁRIOS ===============================================
+
+@app.route("/register", methods=['POST'])
+def register():
+    data = request.get_json()
+    email, password, name = data['email'], data['senha'], data['nome']
+    if type(email) is not str: return jsonify({'error': 'Email precisa ser STRING'}), 401
+    if type(password) is not str: return jsonify({'error': 'Senha precisa ser STRING'}), 401
+    if type(name) is not str: return jsonify({'error': 'Nome precisa ser STRING'}), 401
+
+    return register_or_alter_password(email, password, name)
 
 
 # ============================================== ROTA DE MENSAGENS =====================================================
