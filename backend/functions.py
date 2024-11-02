@@ -1,6 +1,6 @@
 import sqlite3
 import jwt
-import socketio
+import bcrypt
 
 
 def connection():
@@ -38,7 +38,7 @@ def consultar_mensagens(my_id, is_group, id_target=None, group_name=None):
         consulta_mensagens = cursor.execute(f"SELECT * FROM (SELECT * FROM MESSAGES WHERE CONVERSATION_ID = {conversation_target} ORDER BY SENT_AT DESC LIMIT 20) AS SUBQUERY ORDER BY SENT_AT ASC").fetchall()
         mensagens = []
         for mensagem in consulta_mensagens:
-            consulta_response = 0
+            consulta_response = None
             if mensagem[6] is not None and mensagem[6] != 0:
                 consulta_response = cursor.execute(f"SELECT * FROM MESSAGES WHERE MESSAGE_ID = {mensagem[6]}").fetchone()
                 consulta_response = {'id': consulta_response[0], 'conversation_id': consulta_response[1], 'sender_id': consulta_response[2], 'content': consulta_response[3], 'sent_at': consulta_response[4], 'type': consulta_response[5], 'author_name': consulta_nome(consulta_response[2])}
@@ -121,3 +121,18 @@ def consulta_message_using_client_id(client_id):
             return consulta_response
         else:
             return None
+
+
+def register_or_alter_password(email, senha, nome):
+    with connection() as conn:
+        cursor = conn.cursor()
+        hashed = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt())
+        consulta = cursor.execute(f"SELECT * FROM USUARIOS WHERE EMAIL = '{email}'").fetchone()
+        if consulta is None:
+            cursor.execute("INSERT INTO USUARIOS (EMAIL, SENHA, NOME) VALUES (?, ?, ?)", (email, hashed, nome))
+            conn.commit()
+            return 'Usuário cadastrado com sucesso', 201
+        if consulta is not None:
+            cursor.execute(f"UPDATE USUARIOS SET SENHA = ? WHERE EMAIL = ?", (hashed, email))
+            conn.commit()
+            return 'Senha alterada com sucesso', 201
