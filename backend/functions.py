@@ -73,7 +73,7 @@ def consulta_nome(id):
             return consulta[0]
 
 
-def insert_message(conversation_id, author_id, message, response_to, client_id, message_type, type_archive):
+def insert_message(conversation_id, author_id, message, response_to, client_id, message_type, type_archive, sent_at):
     if type_archive is None:
         type_archive = 'NULL'
 
@@ -83,7 +83,7 @@ def insert_message(conversation_id, author_id, message, response_to, client_id, 
             response_to = cursor.execute(f"SELECT MESSAGE_ID FROM MESSAGES WHERE CLIENT_ID = '{response_to}' OR MESSAGE_ID = {response_to}").fetchone()[0]
         elif response_to is None:
             response_to = 'NULL'
-        cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE, RESPONSE_TO, CLIENT_ID, TYPE_ARCHIVE) VALUES ({conversation_id}, {author_id}, '{message}', DATETIME('now','localtime'), '{message_type}', {response_to}, '{client_id}', '{type_archive}')")
+        cursor.execute(f"INSERT INTO MESSAGES (CONVERSATION_ID, SENDER_ID, CONTENT, SENT_AT, MESSAGE_TYPE, RESPONSE_TO, CLIENT_ID, TYPE_ARCHIVE) VALUES ({conversation_id}, {author_id}, '{message}', '{sent_at}', '{message_type}', {response_to}, '{client_id}', '{type_archive}')")
         conn.commit()  # Ao enviar mensagens salvar no banco de dados
 
 
@@ -123,16 +123,27 @@ def consulta_message_using_client_id(client_id):
             return None
 
 
-def register_or_alter_password(email, senha, nome):
+def register_or_alter_password(email, senha, nome, nivel):
     with connection() as conn:
         cursor = conn.cursor()
         hashed = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt())
         consulta = cursor.execute(f"SELECT * FROM USUARIOS WHERE EMAIL = '{email}'").fetchone()
+
         if consulta is None:
-            cursor.execute("INSERT INTO USUARIOS (EMAIL, SENHA, NOME) VALUES (?, ?, ?)", (email, hashed, nome))
+            if email == '' or senha == '' or nome == '':
+                return 'Email, senha ou nome não podem ser vazios para criação de usuário', 401
+            else:
+                cursor.execute("INSERT INTO USUARIOS (EMAIL, SENHA, NOME, NIVEL) VALUES (?, ?, ?, ?)", (email, hashed, nome, int(nivel)))
+                conn.commit()
+                return 'Usuário cadastrado com sucesso', 201
+
+        elif consulta is not None:
+            if senha != '':
+                cursor.execute(f"UPDATE USUARIOS SET SENHA = ? WHERE EMAIL = ?", (hashed, email))
+
+            if nome != '':
+                cursor.execute(f"UPDATE USUARIOS SET NOME = ? WHERE EMAIL = ?", (nome, email))
+
+            cursor.execute(f"UPDATE USUARIOS SET NIVEL = ? WHERE EMAIL = ?", (int(nivel), email))
             conn.commit()
-            return 'Usuário cadastrado com sucesso', 201
-        if consulta is not None:
-            cursor.execute(f"UPDATE USUARIOS SET SENHA = ? WHERE EMAIL = ?", (hashed, email))
-            conn.commit()
-            return 'Senha alterada com sucesso', 201
+            return 'Dados alterados com sucesso', 201
