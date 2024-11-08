@@ -1,4 +1,3 @@
-import bcrypt
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
@@ -49,7 +48,7 @@ def send_archive(sid, data):
 
     if data['is_group'] is False:
         conversation_id = consulta_conversation_id(author_id, target_id)
-        insert_message(conversation_id, author_id, message, data['response_to'], data['client_id'], "BYTES", type_archive)
+        insert_message(conversation_id, author_id, message, data['response_to'], data['client_id'], "BYTES", type_archive, data['sent_at'])
         message_id = consulta_message_id(author_id, message, conversation_id, data['sent_at'])
 
         if client_connections.has(target_id):
@@ -62,7 +61,7 @@ def send_archive(sid, data):
             sio.emit("message", data)
 
     elif data['is_group'] is True:
-        insert_message(target_id, author_id, message, data['response_to'], data['client_id'], "BYTES", type_archive)
+        insert_message(target_id, author_id, message, data['response_to'], data['client_id'], "BYTES", type_archive, data['sent_at'])
         message_id = consulta_message_id(author_id, message, target_id, data['sent_at'])
 
         data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid,
@@ -82,7 +81,7 @@ def send_message(sid, data):
 
     if data['is_group'] is False:
         conversation_id = consulta_conversation_id(author_id, target_id)
-        insert_message(conversation_id, author_id, message, data['response_to'], data['client_id'], "TEXT", None)
+        insert_message(conversation_id, author_id, message, data['response_to'], data['client_id'], "TEXT", None, data['sent_at'])
         message_id = consulta_message_id(author_id, message, conversation_id, data['sent_at'])
 
         if client_connections.has(target_id):
@@ -95,7 +94,7 @@ def send_message(sid, data):
             sio.emit("message", data)
 
     elif data['is_group'] is True:
-        insert_message(target_id, author_id, message, data['response_to'], data['client_id'], "TEXT", None)
+        insert_message(target_id, author_id, message, data['response_to'], data['client_id'], "TEXT", None, data['sent_at'])
         message_id = consulta_message_id(author_id, message, target_id, data['sent_at'])
 
         data = {'target_id': target_id, 'message_id': message_id, 'message': message, 'author': sid,
@@ -162,12 +161,12 @@ def login():
 @app.route("/register", methods=['POST'])
 def register():
     data = request.get_json()
-    email, password, name = data['email'], data['senha'], data['nome']
+    email, password, name, nivel = data['email'], data['senha'], data['nome'], data['nivel']
     if type(email) is not str: return jsonify({'error': 'Email precisa ser STRING'}), 401
     if type(password) is not str: return jsonify({'error': 'Senha precisa ser STRING'}), 401
     if type(name) is not str: return jsonify({'error': 'Nome precisa ser STRING'}), 401
 
-    return register_or_alter_password(email, password, name)
+    return register_or_alter_password(email, password, name, nivel)
 
 
 # ============================================== ROTA DE MENSAGENS =====================================================
