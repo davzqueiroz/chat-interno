@@ -6,17 +6,17 @@ Frontend construído com HTML + CSS + Javascript para fazer a interface do chat 
 
 Para utilização do chat basta atualizar a constante nos arquivos chat.js e server.js nos respectivos caminhos:
 
-- static/js/chat.js:
+  - static/js/chat.js:
 
-Linha 3: const ip_server = 'http://seu_ip_aqui:5000/'
+      Linha 3: const ip_server = 'http://seu_ip_aqui:5000/'
 
-- static/js/server.js:
+  - static/js/server.js:
 
-Linha 1: baseURL: 'http://seu_ip_aqui:5000/'
+      Linha 1: baseURL: 'http://seu_ip_aqui:5000/'
 
 Não é necessário mudar o IP do servidor backend, ele inicia com o IP da máquina.
 Caso deseje mudar a porta do servidor, mude as portas no frontend citadas nos IPs acima e para mudar no servidor siga o caminho abaixo:
 
-- app.py:
+  - app.py:
 
-Linha 266: (local_ip, porta_desejada_aqui)
+      Linha 266: (local_ip, porta_desejada_aqui)
