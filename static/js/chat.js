@@ -283,8 +283,13 @@ lista_opcoes.appendChild(option)
 
 if (user_data['nivel'] == 2) {
 	let option = document.createElement('li');
-	option.innerText = "Criar novo usuário"
+	option.innerText = "Cadastrar usuário / Alterar dados"
 	option.id = 'novo-usuario'
+	lista_opcoes.appendChild(option)
+
+	option = document.createElement('li');
+	option.innerText = 'Criar grupo'
+	option.id = 'criar-grupo'
 	lista_opcoes.appendChild(option)
 }
 
@@ -430,28 +435,56 @@ document.getElementById('sair').addEventListener('click', () => {
 });
 
 if (user_data['nivel'] == 2) {
-document.getElementById('novo-usuario').addEventListener('click', () => {
-	closeConversation()
-	document.getElementById('div-criar-contato').style.display = 'flex';
+	document.getElementById('novo-usuario').addEventListener('click', () => {
+		closeConversation()
+		document.getElementById('div-criar-contato').style.display = 'flex';
 
-	document.getElementById('button-criar-contato').addEventListener('click', async () => {
-		const email = document.getElementById('type-text-criar-contato').value
-		const senha = document.getElementById('senha-criar-contato').value
-		const nome = document.getElementById('nome-criar-contato').value
+		document.getElementById('button-criar-contato').addEventListener('click', async () => {
+			const email = document.getElementById('type-text-criar-contato').value
+			const senha = document.getElementById('senha-criar-contato').value
+			const nome = document.getElementById('nome-criar-contato').value
+			const nivel = document.getElementById('select-nivel').value
 
-		try {
-			const response = await server.post('/register', {email: email, senha: senha, nome: nome})
-			document.getElementById('type-text-criar-contato').value = ''
-			document.getElementById('senha-criar-contato').value = ''
-			document.getElementById('nome-criar-contato').value = ''
-		} catch (error) {
-			window.alert(error);
-		}
-		
-		
+			if (email.length <= 0) return alert('O e-mail não pode ficar em branco');
+
+			try {
+				const response = await server.post('/register', {email: email, senha: senha, nome: nome, nivel: nivel})
+				document.getElementById('type-text-criar-contato').value = ''
+				document.getElementById('senha-criar-contato').value = ''
+				document.getElementById('nome-criar-contato').value = ''
+				
+			} catch (error) {
+				window.alert(error);
+			}
+			
+			
+		});
+
 	});
 
-});
+	document.getElementById('criar-grupo').addEventListener('click', () => {
+		closeConversation()
+		document.getElementById('div-criar-grupo').style.display = 'flex';
+
+		document.getElementById('button-criar-grupo').addEventListener('click', async () => {
+
+			if (email.length <= 0) return alert('O e-mail não pode ficar em branco');
+
+			try {
+				const response = await server.post('/register', {email: email, senha: senha, nome: nome, nivel: nivel})
+				document.getElementById('type-text-criar-contato').value = ''
+				document.getElementById('senha-criar-contato').value = ''
+				document.getElementById('nome-criar-contato').value = ''
+				
+			} catch (error) {
+				window.alert(error);
+			}
+			
+			
+		});
+
+	});
+
 }
 
 // =============================== Função para inserir mensagens no HTML ============================= //
