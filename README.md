@@ -2,6 +2,7 @@
 Chat Interno desenvolvido na empresa Parcol Parafusos.
 
 Backend construído com Python utilizando o framework Flask para criação de um servidor web.
+
 Frontend construído com HTML + CSS + Javascript para fazer a interface do chat e consultas ao backend.
 
 Para utilização do chat basta atualizar a constante nos arquivos chat.js e server.js nos respectivos caminhos:
