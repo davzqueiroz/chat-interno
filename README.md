@@ -1,5 +1,5 @@
 # chat-interno
-Chat Interno desenvolvido na empresa Parcol Parafusos.
+## Chat Interno desenvolvido na empresa Parcol Parafusos.
 
 Backend construído com Python utilizando o framework Flask para criação de um servidor web.
 
@@ -21,3 +21,6 @@ Caso deseje mudar a porta do servidor, mude as portas no frontend citadas nos IP
   - app.py:
 
       Linha 266: (local_ip, porta_desejada_aqui)
+
+
+## Após essas alterações, basta rodar o server.bat ou iniciar o app.py com a IDE que desejar.
